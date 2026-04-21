@@ -1,8 +1,17 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f8f6f1;
+  --foreground: #1f2430;
+
+  --petgo-navy: #16386f;
+  --petgo-navy-dark: #102a52;
+  --petgo-gold: #f2a31b;
+  --petgo-gold-dark: #cf7d00;
+  --petgo-cream: #fffaf2;
+  --petgo-border: #e8e1d6;
+  --petgo-muted: #6e6a63;
+  --petgo-card: #ffffff;
 }
 
 @theme inline {
@@ -12,15 +21,46 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.rdp {
+  --rdp-accent-color: var(--petgo-gold);
+  --rdp-background-color: #fff7ea;
+  margin: 0;
+}
+
+.rdp-months {
+  justify-content: center;
+}
+
+.rdp-day_selected,
+.rdp-day_selected:focus-visible,
+.rdp-day_selected:hover {
+  background-color: var(--petgo-navy) !important;
+  color: white !important;
+}
+
+.rdp-day_today {
+  color: var(--petgo-gold-dark);
+  font-weight: 700;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background:
+    radial-gradient(circle at top, #fff8ea 0%, #f8f6f1 40%, #f6f3ed 100%);
+  color: var(--foreground);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  min-height: 100vh;
 }
