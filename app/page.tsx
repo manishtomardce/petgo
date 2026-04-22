@@ -414,7 +414,7 @@ export default function HomePage() {
                 </h1>
 
                 <div className="mt-3 text-center">
-                  <p className="text-[14px]  text-[#2E2A26]">
+                  <p className="text-[14px]  text-[#2d2b28]">
                     Discover & Book the perfect club for your dog
                   </p>
                  
