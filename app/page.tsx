@@ -415,7 +415,7 @@ export default function HomePage() {
 
                 <div className="mt-3 text-center">
                   <p className="text-[16px] font-semibold text-[#2E2A26]">
-                    Find the perfect club for your dog
+                    Discover & Book the perfect club for your dog
                   </p>
                  
                 </div>
