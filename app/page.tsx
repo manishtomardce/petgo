@@ -167,7 +167,7 @@ export default function HomePage() {
   const [selectedCity, setSelectedCity] = useState("All");
   const [selectedService, setSelectedService] = useState("All Services");
 
-  const [sortMode, setSortMode] = useState<SortMode>("none");
+  const [sortMode, setSortMode] = useState<SortMode>("distance");
   const [userLocation, setUserLocation] = useState<UserLocation | null>(null);
 
   const [locationLoading, setLocationLoading] = useState(false);
@@ -180,11 +180,11 @@ export default function HomePage() {
 
   useEffect(() => {
     setShowSplash(true);
-  
+
     const splashTimer = setTimeout(() => {
       setShowSplash(false);
     }, 2000);
-  
+
     return () => clearTimeout(splashTimer);
   }, []);
 
@@ -227,28 +227,11 @@ export default function HomePage() {
     if (hasAutoCheckedLocation.current) return;
     hasAutoCheckedLocation.current = true;
 
-    if (typeof window === "undefined" || !navigator.geolocation) return;
-    if (!("permissions" in navigator) || !navigator.permissions?.query) return;
-
-    async function checkLocationPermission() {
-      try {
-        const permissionStatus = await navigator.permissions.query({
-          name: "geolocation",
-        });
-
-        if (permissionStatus.state === "granted") {
-          requestLocationAndSort({
-            silent: true,
-            autoApplyDistance: false,
-          });
-        }
-      } catch {
-        // Ignore unsupported permissions API issues
-      }
-    }
-
-    checkLocationPermission();
-  }, [selectedCity]);
+    requestLocationAndSort({
+      silent: true,
+      autoApplyDistance: true,
+    });
+  }, []);
 
   function clearLocationMessageTimers() {
     locationMessageTimers.current.forEach((timer) =>
@@ -323,7 +306,6 @@ export default function HomePage() {
         const code = error.code;
 
         if (code === 1) {
-          setSortMode("none");
           if (!silent) {
             showLocationNotice(
               "Please allow location access for this website in Safari"
@@ -411,7 +393,7 @@ export default function HomePage() {
       : "";
 
   const sectionTitle =
-    sortMode === "distance"
+    sortMode === "distance" && userLocation
       ? "Nearest clubs"
       : sortMode === "rating"
       ? "Top rated clubs"
@@ -422,33 +404,36 @@ export default function HomePage() {
       {showSplash ? <SplashScreen /> : null}
 
       <main className="min-h-screen bg-white">
-        <div className="mx-auto max-w-md px-4 pb-8 pt-4">
-          <section className="mb-6">
-            <div className="mb-4">
+        <div className="mx-auto max-w-md px-4 pb-8 pt-3">
+          <section className="mb-5">
+            <div className="mb-3">
               <div className="flex flex-col items-center">
-                <h1 className="leading-none text-[45px] font-extrabold tracking-[-0.03em]">
+                <h1 className="leading-none text-[42px] font-extrabold tracking-[-0.03em]">
                   <span className="text-[#F4A623]">Pet</span>
                   <span className="text-[#16386F]">Go</span>
                 </h1>
 
-                <p className="mt-1 text-center text-[15px] font-medium leading-snug tracking-[0.01em] text-[#736B61]">
-                  Discover & Book premium pet clubs near you.
-                </p>
+                <div className="mt-3 text-center">
+                  <p className="text-[16px] font-semibold text-[#2E2A26]">
+                    Find the perfect club for your dog
+                  </p>
+                 
+                </div>
               </div>
             </div>
           </section>
 
-          <section className="mb-5">
-            <div className="mb-3 flex flex-wrap gap-2.5">
+          <section className="mb-4">
+            <div className="mb-2 -mx-1 flex gap-2 overflow-x-auto px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               {cityOptions.map((city) => (
                 <button
                   key={city}
                   type="button"
                   onClick={() => setSelectedCity(city)}
-                  className={`rounded-full border px-5 py-3 text-[15px] font-semibold transition ${
+                  className={`shrink-0 rounded-full border px-4 py-2 text-[13px] font-medium transition ${
                     selectedCity === city
-                      ? "border-[#16386F] bg-[#16386F] text-white shadow-[0_10px_24px_rgba(22,56,111,0.18)]"
-                      : "border-[#E7DED1] bg-white text-[#3E362F] shadow-[0_4px_10px_rgba(17,24,39,0.03)]"
+                      ? "border-[#16386F] bg-[#16386F] text-white shadow-[0_6px_16px_rgba(22,56,111,0.16)]"
+                      : "border-[#E7DED1] bg-white text-[#3E362F]"
                   }`}
                 >
                   {city}
@@ -456,13 +441,13 @@ export default function HomePage() {
               ))}
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
               <div className="min-w-0 flex-1">
                 <div className="relative">
                   <select
                     value={selectedService}
                     onChange={(e) => setSelectedService(e.target.value)}
-                    className="h-14 w-full appearance-none rounded-full border border-[#E7DED1] bg-white px-5 pr-11 text-[16px] font-semibold text-[#2E2A26] shadow-[0_8px_22px_rgba(17,24,39,0.04)] outline-none transition focus:border-[#16386F]"
+                    className="h-11 w-full appearance-none rounded-full border border-[#E7DED1] bg-white px-4 pr-10 text-[14px] font-medium text-[#2E2A26] shadow-[0_6px_16px_rgba(17,24,39,0.04)] outline-none transition focus:border-[#16386F]"
                   >
                     {serviceOptions.map((service) => (
                       <option key={service} value={service}>
@@ -471,13 +456,13 @@ export default function HomePage() {
                     ))}
                   </select>
 
-                  <span className="pointer-events-none absolute right-5 top-1/2 -translate-y-1/2 text-xl text-[#4A433D]">
+                  <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-base text-[#4A433D]">
                     ˅
                   </span>
                 </div>
               </div>
 
-              <div className="w-[150px] shrink-0">
+              <div className="w-[132px] shrink-0">
                 <div className="relative">
                   <select
                     value={sortDropdownValue}
@@ -489,9 +474,9 @@ export default function HomePage() {
                         | "clear";
 
                       if (value === "distance") {
-                        if (userLocation) {
-                          setSortMode("distance");
-                        } else {
+                        setSortMode("distance");
+
+                        if (!userLocation) {
                           requestLocationAndSort({
                             silent: false,
                             autoApplyDistance: true,
@@ -508,7 +493,7 @@ export default function HomePage() {
                       setSortMode("none");
                     }}
                     disabled={locationLoading}
-                    className="h-14 w-full appearance-none rounded-full border border-[#E7DED1] bg-white px-5 pr-11 text-[16px] font-semibold text-[#2E2A26] shadow-[0_8px_22px_rgba(17,24,39,0.04)] outline-none transition focus:border-[#16386F] disabled:opacity-60"
+                    className="h-11 w-full appearance-none rounded-full border border-[#E7DED1] bg-white px-4 pr-10 text-[14px] font-medium text-[#2E2A26] shadow-[0_6px_16px_rgba(17,24,39,0.04)] outline-none transition focus:border-[#16386F] disabled:opacity-60"
                   >
                     <option value="">Sort by</option>
                     <option value="distance">Distance</option>
@@ -516,7 +501,7 @@ export default function HomePage() {
                     <option value="clear">Clear</option>
                   </select>
 
-                  <span className="pointer-events-none absolute right-5 top-1/2 -translate-y-1/2 text-xl text-[#4A433D]">
+                  <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-base text-[#4A433D]">
                     ˅
                   </span>
                 </div>
@@ -530,12 +515,6 @@ export default function HomePage() {
                 }`}
               >
                 {locationMessage}
-              </div>
-            )}
-
-            {sortMode === "distance" && userLocation && (
-              <div className="mt-2 px-1 text-xs font-medium text-[#7B7268]">
-                Showing clubs nearest to you
               </div>
             )}
           </section>
