@@ -183,7 +183,7 @@ export default function HomePage() {
 
     const splashTimer = setTimeout(() => {
       setShowSplash(false);
-    }, 4000);
+    }, 3000);
 
     return () => clearTimeout(splashTimer);
   }, []);
@@ -232,7 +232,7 @@ export default function HomePage() {
         silent: false,
         autoApplyDistance: true,
       });
-    }, 4000);
+    }, 3000);
 
     return () => clearTimeout(locationTimer);
   }, []);

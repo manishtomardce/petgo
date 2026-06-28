@@ -99,7 +99,8 @@ export default function ClubCard({ club }: { club: Club }) {
 
   return (
     <Link href={`/clubs/${club.id}`} className="block">
-      <article className="overflow-hidden rounded-[28px] border border-[#EEE7DC] bg-white shadow-[0_14px_34px_rgba(17,24,39,0.08)] transition hover:-translate-y-0.5 hover:shadow-[0_18px_40px_rgba(17,24,39,0.12)]">
+      <article className="overflow-hidden rounded-[28px] border border-[#EEE7DC] bg-white shadow-[0_14px_34px_rgba(17,24,39,0.08)] transition-all duration-150 hover:-translate-y-0.5 hover:shadow-[0_18px_40px_rgba(17,24,39,0.12)] active:scale-[0.97] active:shadow-[0_6px_16px_rgba(17,24,39,0.08)]"></article>
+      //<article className="overflow-hidden rounded-[28px] border border-[#EEE7DC] bg-white shadow-[0_14px_34px_rgba(17,24,39,0.08)] transition hover:-translate-y-0.5 hover:shadow-[0_18px_40px_rgba(17,24,39,0.12)]">
         
         {/* IMAGE */}
         <div
