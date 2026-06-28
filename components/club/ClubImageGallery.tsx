@@ -1,5 +1,4 @@
 "use client";
-
 import { useMemo, useRef, useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -22,7 +21,6 @@ export default function ClubImageGallery({
     const cleaned = images
       .map((img) => (typeof img === "string" ? img.trim() : ""))
       .filter(Boolean);
-
     return cleaned.length > 0 ? cleaned : ["/placeholder-club.jpg"];
   }, [images]);
 
@@ -42,18 +40,11 @@ export default function ClubImageGallery({
 
   const handleTouchEnd = (e: React.TouchEvent<HTMLDivElement>) => {
     touchEndX.current = e.changedTouches[0].clientX;
-
     if (touchStartX.current === null || touchEndX.current === null) return;
-
     const deltaX = touchStartX.current - touchEndX.current;
     const minSwipeDistance = 50;
-
-    if (deltaX > minSwipeDistance) {
-      goNext();
-    } else if (deltaX < -minSwipeDistance) {
-      goPrev();
-    }
-
+    if (deltaX > minSwipeDistance) goNext();
+    else if (deltaX < -minSwipeDistance) goPrev();
     touchStartX.current = null;
     touchEndX.current = null;
   };
@@ -61,7 +52,11 @@ export default function ClubImageGallery({
   return (
     <div className="relative w-full bg-white">
       <div
-        className="relative h-[50vh] w-full overflow-hidden bg-neutral-100"
+        className="relative w-full overflow-hidden bg-neutral-100"
+        style={{
+          height: "calc(50vh + env(safe-area-inset-top))",
+          marginTop: "calc(-1 * env(safe-area-inset-top))",
+        }}
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
@@ -71,10 +66,12 @@ export default function ClubImageGallery({
           className="h-full w-full object-cover object-center"
           draggable={false}
         />
-
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/20 to-transparent" />
 
-        <div className="absolute left-4 top-4 z-20">
+        <div
+          className="absolute left-4 z-20"
+          style={{ top: "calc(env(safe-area-inset-top) + 16px)" }}
+        >
           <button
             type="button"
             onClick={() => router.back()}
