@@ -31,7 +31,7 @@ type SortMode = "none" | "distance" | "rating";
 
 const supabase = createClient();
 
-const cityOptions = ["All", "Gurgaon", "Noida", "Delhi"];
+const cityOptions = ["All", "Gurgaon", "Bangalore", "Noida" , "Delhi"];
 const serviceOptions = [
   "All Services",
   "Daycare",
@@ -205,7 +205,7 @@ export default function HomePage() {
           setClubs([]);
           return;
         }
-
+        
         setClubs(data || []);
       } finally {
         setLoading(false);
@@ -528,14 +528,28 @@ export default function HomePage() {
             </div>
           )}
 
-          <section className="space-y-5">
+<section className="space-y-5">
             {loading ? (
-              <div className="rounded-[26px] border border-[#EDE4D8] bg-white p-6 text-sm font-medium text-[#6F675D] shadow-[0_12px_28px_rgba(17,24,39,0.05)]">
-                Loading clubs...
-              </div>
+              <>
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="rounded-[26px] border border-[#EDE4D8] bg-white overflow-hidden shadow-[0_12px_28px_rgba(17,24,39,0.05)] animate-pulse">
+                    <div className="h-[220px] bg-[#F0EBE3]" />
+                    <div className="p-4 space-y-3">
+                      <div className="h-5 w-2/3 rounded-full bg-[#F0EBE3]" />
+                      <div className="h-4 w-1/3 rounded-full bg-[#F0EBE3]" />
+                      <div className="flex gap-2 pt-1">
+                        <div className="h-7 w-20 rounded-full bg-[#F0EBE3]" />
+                        <div className="h-7 w-20 rounded-full bg-[#F0EBE3]" />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </>
             ) : filteredClubs.length === 0 ? (
-              <div className="rounded-[26px] border border-[#EDE4D8] bg-white p-6 text-sm font-medium text-[#6F675D] shadow-[0_12px_28px_rgba(17,24,39,0.05)]">
-                No clubs found for selected filters.
+              <div className="rounded-[26px] border border-[#EDE4D8] bg-white p-8 shadow-[0_12px_28px_rgba(17,24,39,0.05)] text-center">
+                <p className="text-[32px]">🐾</p>
+                <p className="mt-2 text-[15px] font-semibold text-[#16386F]">No clubs found</p>
+                <p className="mt-1 text-[13px] text-[#7A7368]">Try changing the city or service filter</p>
               </div>
             ) : (
               filteredClubs.map((club) => <ClubCard key={club.id} club={club} />)
