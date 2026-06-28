@@ -290,13 +290,7 @@ export default function HomePage() {
 
         setUserLocation(nextLocation);
 
-        if (selectedCity === "All") {
-          const nearestCity = getClosestKnownCity(
-            nextLocation.latitude,
-            nextLocation.longitude
-          );
-          setSelectedCity(nearestCity);
-        }
+        
 
         if (autoApplyDistance) {
           setSortMode("distance");

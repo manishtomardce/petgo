@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "PetGo – Discover & Book Pet Clubs",
-  description: "Find and book the best daycare, boarding, grooming, and pet clubs for your dog in Gurgaon, Delhi, and Noida.",
+  description: "Find and book the best daycare, boarding, grooming, and pet clubs for your dog",
 };
 
 export default function RootLayout({
