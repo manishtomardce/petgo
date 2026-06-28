@@ -183,7 +183,7 @@ export default function HomePage() {
 
     const splashTimer = setTimeout(() => {
       setShowSplash(false);
-    }, 2000);
+    }, 4000);
 
     return () => clearTimeout(splashTimer);
   }, []);
@@ -227,10 +227,14 @@ export default function HomePage() {
     if (hasAutoCheckedLocation.current) return;
     hasAutoCheckedLocation.current = true;
 
-    requestLocationAndSort({
-      silent: true,
-      autoApplyDistance: true,
-    });
+    const locationTimer = setTimeout(() => {
+      requestLocationAndSort({
+        silent: false,
+        autoApplyDistance: true,
+      });
+    }, 4000);
+
+    return () => clearTimeout(locationTimer);
   }, []);
 
   function clearLocationMessageTimers() {
