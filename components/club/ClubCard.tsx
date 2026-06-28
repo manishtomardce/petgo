@@ -18,12 +18,7 @@ type Club = {
 
 function parseServices(services: string | null) {
   if (!services) return [];
-
-  return services
-    .split(",")
-    .map((item) => item.trim())
-    .filter(Boolean)
-    .slice(0, 3);
+  return services.split(",").map((item) => item.trim()).filter(Boolean).slice(0, 3);
 }
 
 function getClubImages(club: Club) {
@@ -31,7 +26,6 @@ function getClubImages(club: Club) {
     club.cover_image,
     ...(club.images ? club.images.split(",").map((item) => item.trim()) : []),
   ].filter(Boolean) as string[];
-
   return Array.from(new Set(rawImages));
 }
 
@@ -67,41 +61,26 @@ export default function ClubCard({ club }: { club: Club }) {
   function handleTouchEnd(e: React.TouchEvent<HTMLDivElement>) {
     e.preventDefault();
     if (!hasMultipleImages || touchStartX === null || touchEndX === null) return;
-
     const distance = touchStartX - touchEndX;
     const minSwipeDistance = 40;
-
-    if (distance > minSwipeDistance) {
-      goToNext();
-    } else if (distance < -minSwipeDistance) {
-      goToPrevious();
-    }
-
+    if (distance > minSwipeDistance) goToNext();
+    else if (distance < -minSwipeDistance) goToPrevious();
     setTouchStartX(null);
     setTouchEndX(null);
   }
 
-  function handleImageTap(
-    e: React.MouseEvent<HTMLDivElement, MouseEvent>
-  ) {
+  function handleImageTap(e: React.MouseEvent<HTMLDivElement, MouseEvent>) {
     if (!hasMultipleImages) return;
-
     const rect = e.currentTarget.getBoundingClientRect();
     const clickX = e.clientX - rect.left;
-    const halfWidth = rect.width / 2;
-
-    if (clickX < halfWidth) {
-      goToPrevious();
-    } else {
-      goToNext();
-    }
+    if (clickX < rect.width / 2) goToPrevious();
+    else goToNext();
   }
 
   return (
-    <Link href={`/clubs/${club.id}`} className="block">
-      <article className="overflow-hidden rounded-[28px] border border-[#EEE7DC] bg-white shadow-[0_14px_34px_rgba(17,24,39,0.08)] transition-all duration-150 hover:-translate-y-0.5 hover:shadow-[0_18px_40px_rgba(17,24,39,0.12)] active:scale-[0.97] active:shadow-[0_6px_16px_rgba(17,24,39,0.08)]"></article>
-      //<article className="overflow-hidden rounded-[28px] border border-[#EEE7DC] bg-white shadow-[0_14px_34px_rgba(17,24,39,0.08)] transition hover:-translate-y-0.5 hover:shadow-[0_18px_40px_rgba(17,24,39,0.12)]">
-        
+    <Link href={`/clubs/${club.id}`} className="block active:scale-[0.97] active:opacity-80 transition-all duration-150">
+      <article className="overflow-hidden rounded-[28px] border border-[#EEE7DC] bg-white shadow-[0_14px_34px_rgba(17,24,39,0.08)] hover:-translate-y-0.5 hover:shadow-[0_18px_40px_rgba(17,24,39,0.12)] transition-all duration-150">
+
         {/* IMAGE */}
         <div
           className="relative h-52 w-full overflow-hidden bg-[#f4efe6]"
@@ -116,20 +95,14 @@ export default function ClubCard({ club }: { club: Club }) {
             className="h-full w-full select-none object-cover"
             draggable={false}
           />
-
-          {/* gradient overlay */}
           <div className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/25 to-transparent" />
-
-          {/* dots */}
           {hasMultipleImages && (
             <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 items-center gap-1.5 rounded-full bg-black/25 px-2 py-1 backdrop-blur-sm">
               {imageList.map((_, index) => (
                 <span
                   key={index}
                   className={`h-1.5 rounded-full transition-all ${
-                    index === currentIndex
-                      ? "w-4 bg-white"
-                      : "w-1.5 bg-white/70"
+                    index === currentIndex ? "w-4 bg-white" : "w-1.5 bg-white/70"
                   }`}
                 />
               ))}
@@ -144,11 +117,9 @@ export default function ClubCard({ club }: { club: Club }) {
               <h3 className="truncate text-[20px] font-semibold text-[#16386F]">
                 {club.name}
               </h3>
-
               <p className="mt-1 text-[14px] text-[#7A746C]">
                 {[club.area, club.city].filter(Boolean).join(", ")}
               </p>
-
               {club.distanceKm != null && (
                 <div className="mt-1 flex items-center gap-1 text-xs text-[#7A746C]">
                   <span>📍</span>
@@ -156,14 +127,10 @@ export default function ClubCard({ club }: { club: Club }) {
                 </div>
               )}
             </div>
-
-            {/* RATING */}
             <div className="shrink-0 rounded-full bg-[#FFF4DA] px-3 py-1.5 text-xs font-semibold text-[#8A5A00]">
               ⭐ {club.rating ?? "4.5"}
             </div>
           </div>
-
-          {/* SERVICES */}
           {serviceList.length > 0 && (
             <div className="mt-4 flex flex-wrap gap-2">
               {serviceList.map((service) => (
