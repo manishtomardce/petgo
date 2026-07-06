@@ -78,8 +78,7 @@ export default function ClubCard({ club }: { club: Club }) {
   }
 
   return (
-    <Link href={`/clubs/${club.id}`} className="block active:scale-[0.97] active:opacity-80 transition-all duration-150">
-      <article className="overflow-hidden rounded-[28px] border border-[#EEE7DC] bg-white shadow-[0_14px_34px_rgba(17,24,39,0.08)] hover:-translate-y-0.5 hover:shadow-[0_18px_40px_rgba(17,24,39,0.12)] transition-all duration-150">
+    <article className="overflow-hidden rounded-[28px] border border-[#EEE7DC] bg-white shadow-[0_14px_34px_rgba(17,24,39,0.08)] hover:-translate-y-0.5 hover:shadow-[0_18px_40px_rgba(17,24,39,0.12)] transition-all duration-150">
 
         {/* IMAGE */}
         <div
@@ -143,8 +142,13 @@ export default function ClubCard({ club }: { club: Club }) {
               ))}
             </div>
           )}
+          <Link
+            href={`/clubs/${club.id}`}
+            className="mt-4 block w-full rounded-full bg-[#16386F] py-2.5 text-center text-sm font-semibold text-white active:scale-[0.97] transition-all duration-150"
+          >
+            View Club
+          </Link>
         </div>
-      </article>
-    </Link>
+    </article>
   );
 }
