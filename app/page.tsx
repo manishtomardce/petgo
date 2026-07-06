@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createClient } from "../lib/supabase";
 import ClubCard from "@/components/club/ClubCard";
 
@@ -30,6 +30,8 @@ type ClubWithDistance = Club & {
 type SortMode = "none" | "distance" | "rating";
 
 const supabase = createClient();
+
+let cachedClubs: Club[] | null = null;
 
 const cityOptions = ["All", "Gurgaon", "Bangalore", "Noida" , "Delhi"];
 const serviceOptions = [
@@ -161,8 +163,8 @@ function SplashScreen() {
 export default function HomePage() {
   const [showSplash, setShowSplash] = useState(false);
 
-  const [clubs, setClubs] = useState<Club[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [clubs, setClubs] = useState<Club[]>(() => cachedClubs ?? []);
+  const [loading, setLoading] = useState(() => cachedClubs === null);
 
   const [selectedCity, setSelectedCity] = useState("All");
   const [selectedService, setSelectedService] = useState("All Services");
@@ -192,6 +194,8 @@ export default function HomePage() {
   }, []);
 
   useEffect(() => {
+    if (cachedClubs !== null) return;
+
     async function fetchClubs() {
       try {
         setLoading(true);
@@ -208,8 +212,9 @@ export default function HomePage() {
           setClubs([]);
           return;
         }
-        
-        setClubs(data || []);
+
+        cachedClubs = data || [];
+        setClubs(cachedClubs);
       } finally {
         setLoading(false);
       }
@@ -218,16 +223,14 @@ export default function HomePage() {
     fetchClubs();
   }, []);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (loading) return;
 
     const savedScroll = sessionStorage.getItem("petgo_listing_scroll");
     if (savedScroll === null) return;
 
     sessionStorage.removeItem("petgo_listing_scroll");
-    requestAnimationFrame(() => {
-      window.scrollTo(0, Number(savedScroll));
-    });
+    window.scrollTo(0, Number(savedScroll));
   }, [loading]);
 
   useEffect(() => {
