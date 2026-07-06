@@ -179,6 +179,9 @@ export default function HomePage() {
   const locationMessageTimers = useRef<number[]>([]);
 
   useEffect(() => {
+    if (sessionStorage.getItem("petgo_splash_shown")) return;
+    sessionStorage.setItem("petgo_splash_shown", "1");
+
     setShowSplash(true);
 
     const splashTimer = setTimeout(() => {
