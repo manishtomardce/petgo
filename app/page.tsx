@@ -32,6 +32,7 @@ type SortMode = "none" | "distance" | "rating";
 const supabase = createClient();
 
 let cachedClubs: Club[] | null = null;
+let cachedUserLocation: UserLocation | null = null;
 
 const cityOptions = ["All", "Gurgaon", "Bangalore", "Noida" , "Delhi"];
 const serviceOptions = [
@@ -170,7 +171,7 @@ export default function HomePage() {
   const [selectedService, setSelectedService] = useState("All Services");
 
   const [sortMode, setSortMode] = useState<SortMode>("distance");
-  const [userLocation, setUserLocation] = useState<UserLocation | null>(null);
+  const [userLocation, setUserLocation] = useState<UserLocation | null>(() => cachedUserLocation);
 
   const [locationLoading, setLocationLoading] = useState(false);
   const [locationMessage, setLocationMessage] = useState("");
@@ -245,6 +246,8 @@ export default function HomePage() {
     if (hasAutoCheckedLocation.current) return;
     hasAutoCheckedLocation.current = true;
 
+    if (cachedUserLocation !== null) return;
+
     const locationTimer = setTimeout(() => {
       requestLocationAndSort({
         silent: false,
@@ -306,9 +309,8 @@ export default function HomePage() {
           longitude: position.coords.longitude,
         };
 
+        cachedUserLocation = nextLocation;
         setUserLocation(nextLocation);
-
-        
 
         if (autoApplyDistance) {
           setSortMode("distance");
