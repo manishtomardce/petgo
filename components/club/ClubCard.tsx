@@ -144,6 +144,7 @@ export default function ClubCard({ club }: { club: Club }) {
           )}
           <Link
             href={`/clubs/${club.id}`}
+            onClick={() => sessionStorage.setItem("petgo_listing_scroll", String(window.scrollY))}
             className="mt-4 block w-full rounded-full bg-[#16386F] py-2.5 text-center text-sm font-semibold text-white active:scale-[0.97] transition-all duration-150"
           >
             View Club

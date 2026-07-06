@@ -219,6 +219,18 @@ export default function HomePage() {
   }, []);
 
   useEffect(() => {
+    if (loading) return;
+
+    const savedScroll = sessionStorage.getItem("petgo_listing_scroll");
+    if (savedScroll === null) return;
+
+    sessionStorage.removeItem("petgo_listing_scroll");
+    requestAnimationFrame(() => {
+      window.scrollTo(0, Number(savedScroll));
+    });
+  }, [loading]);
+
+  useEffect(() => {
     return () => {
       locationMessageTimers.current.forEach((timer) =>
         window.clearTimeout(timer)
