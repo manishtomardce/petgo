@@ -422,133 +422,135 @@ export default function HomePage() {
       {showSplash ? <SplashScreen /> : null}
 
       <main className="min-h-screen bg-white">
-        <div className="mx-auto max-w-md px-4 pb-8 pt-3">
-          <section className="mb-5">
-            <div className="mb-3">
-              <div className="flex flex-col items-center">
-                <h1 className="leading-none text-[42px] font-extrabold tracking-[-0.03em]">
-                  <span className="text-[#F4A623]">Pet</span>
-                  <span className="text-[#16386F]">Go</span>
-                </h1>
+        <div className="mx-auto max-w-6xl px-4 pb-8 pt-3">
+          <div className="mx-auto max-w-md lg:max-w-2xl">
+            <section className="mb-5">
+              <div className="mb-3">
+                <div className="flex flex-col items-center">
+                  <h1 className="leading-none text-[42px] font-extrabold tracking-[-0.03em]">
+                    <span className="text-[#F4A623]">Pet</span>
+                    <span className="text-[#16386F]">Go</span>
+                  </h1>
 
-                <div className="mt-3 text-center">
-                  <p className="text-[14px]  text-[#2d2b28]">
-                    Discover & Book the perfect club for your dog
-                  </p>
-                 
+                  <div className="mt-3 text-center">
+                    <p className="text-[14px]  text-[#2d2b28]">
+                      Discover & Book the perfect club for your dog
+                    </p>
+
+                  </div>
                 </div>
               </div>
-            </div>
-          </section>
+            </section>
 
-          <section className="mb-4">
-            <div className="mb-2 -mx-1 flex gap-2 overflow-x-auto px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              {cityOptions.map((city) => (
-                <button
-                  key={city}
-                  type="button"
-                  onClick={() => setSelectedCity(city)}
-                  className={`shrink-0 rounded-full border px-4 py-2 text-[13px] font-medium transition ${
-                    selectedCity === city
-                      ? "border-[#16386F] bg-[#16386F] text-white shadow-[0_6px_16px_rgba(22,56,111,0.16)]"
-                      : "border-[#E7DED1] bg-white text-[#3E362F]"
+            <section className="mb-4">
+              <div className="mb-2 -mx-1 flex gap-2 overflow-x-auto px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                {cityOptions.map((city) => (
+                  <button
+                    key={city}
+                    type="button"
+                    onClick={() => setSelectedCity(city)}
+                    className={`shrink-0 rounded-full border px-4 py-2 text-[13px] font-medium transition ${
+                      selectedCity === city
+                        ? "border-[#16386F] bg-[#16386F] text-white shadow-[0_6px_16px_rgba(22,56,111,0.16)]"
+                        : "border-[#E7DED1] bg-white text-[#3E362F]"
+                    }`}
+                  >
+                    {city}
+                  </button>
+                ))}
+              </div>
+
+              <div className="flex items-center gap-2">
+                <div className="min-w-0 flex-1">
+                  <div className="relative">
+                    <select
+                      value={selectedService}
+                      onChange={(e) => setSelectedService(e.target.value)}
+                      className="h-11 w-full appearance-none rounded-full border border-[#E7DED1] bg-white px-4 pr-10 text-[14px] font-medium text-[#2E2A26] shadow-[0_6px_16px_rgba(17,24,39,0.04)] outline-none transition focus:border-[#16386F]"
+                    >
+                      {serviceOptions.map((service) => (
+                        <option key={service} value={service}>
+                          {service}
+                        </option>
+                      ))}
+                    </select>
+
+                    <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-base text-[#4A433D]">
+                      ˅
+                    </span>
+                  </div>
+                </div>
+
+                <div className="w-[132px] shrink-0">
+                  <div className="relative">
+                    <select
+                      value={sortDropdownValue}
+                      onChange={(e) => {
+                        const value = e.target.value as
+                          | ""
+                          | "distance"
+                          | "rating"
+                          | "clear";
+
+                        if (value === "distance") {
+                          setSortMode("distance");
+
+                          if (!userLocation) {
+                            requestLocationAndSort({
+                              silent: false,
+                              autoApplyDistance: true,
+                            });
+                          }
+                          return;
+                        }
+
+                        if (value === "rating") {
+                          setSortMode("rating");
+                          return;
+                        }
+
+                        setSortMode("none");
+                      }}
+                      disabled={locationLoading}
+                      className="h-11 w-full appearance-none rounded-full border border-[#E7DED1] bg-white px-4 pr-10 text-[14px] font-medium text-[#2E2A26] shadow-[0_6px_16px_rgba(17,24,39,0.04)] outline-none transition focus:border-[#16386F] disabled:opacity-60"
+                    >
+                      <option value="">Sort by</option>
+                      <option value="distance">Distance</option>
+                      <option value="rating">Rating</option>
+                      <option value="clear">Clear</option>
+                    </select>
+
+                    <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-base text-[#4A433D]">
+                      ˅
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {locationMessageVisible && (
+                <div
+                  className={`mt-3 px-1 text-xs font-medium text-[#7B7268] transition-opacity duration-500 ${
+                    locationMessageFading ? "opacity-0" : "opacity-100"
                   }`}
                 >
-                  {city}
-                </button>
-              ))}
-            </div>
-
-            <div className="flex items-center gap-2">
-              <div className="min-w-0 flex-1">
-                <div className="relative">
-                  <select
-                    value={selectedService}
-                    onChange={(e) => setSelectedService(e.target.value)}
-                    className="h-11 w-full appearance-none rounded-full border border-[#E7DED1] bg-white px-4 pr-10 text-[14px] font-medium text-[#2E2A26] shadow-[0_6px_16px_rgba(17,24,39,0.04)] outline-none transition focus:border-[#16386F]"
-                  >
-                    {serviceOptions.map((service) => (
-                      <option key={service} value={service}>
-                        {service}
-                      </option>
-                    ))}
-                  </select>
-
-                  <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-base text-[#4A433D]">
-                    ˅
-                  </span>
+                  {locationMessage}
                 </div>
-              </div>
+              )}
+            </section>
 
-              <div className="w-[132px] shrink-0">
-                <div className="relative">
-                  <select
-                    value={sortDropdownValue}
-                    onChange={(e) => {
-                      const value = e.target.value as
-                        | ""
-                        | "distance"
-                        | "rating"
-                        | "clear";
-
-                      if (value === "distance") {
-                        setSortMode("distance");
-
-                        if (!userLocation) {
-                          requestLocationAndSort({
-                            silent: false,
-                            autoApplyDistance: true,
-                          });
-                        }
-                        return;
-                      }
-
-                      if (value === "rating") {
-                        setSortMode("rating");
-                        return;
-                      }
-
-                      setSortMode("none");
-                    }}
-                    disabled={locationLoading}
-                    className="h-11 w-full appearance-none rounded-full border border-[#E7DED1] bg-white px-4 pr-10 text-[14px] font-medium text-[#2E2A26] shadow-[0_6px_16px_rgba(17,24,39,0.04)] outline-none transition focus:border-[#16386F] disabled:opacity-60"
-                  >
-                    <option value="">Sort by</option>
-                    <option value="distance">Distance</option>
-                    <option value="rating">Rating</option>
-                    <option value="clear">Clear</option>
-                  </select>
-
-                  <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-base text-[#4A433D]">
-                    ˅
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {locationMessageVisible && (
-              <div
-                className={`mt-3 px-1 text-xs font-medium text-[#7B7268] transition-opacity duration-500 ${
-                  locationMessageFading ? "opacity-0" : "opacity-100"
-                }`}
-              >
-                {locationMessage}
+            {!loading && (
+              <div className="mb-4 flex items-center justify-between px-1">
+                <span className="text-[18px] font-semibold tracking-[-0.02em] text-[#16386F]">
+                  {sectionTitle}
+                </span>
+                <span className="text-sm font-medium text-[#7A7368]">
+                  {filteredClubs.length} found
+                </span>
               </div>
             )}
-          </section>
+          </div>
 
-          {!loading && (
-            <div className="mb-4 flex items-center justify-between px-1">
-              <span className="text-[18px] font-semibold tracking-[-0.02em] text-[#16386F]">
-                {sectionTitle}
-              </span>
-              <span className="text-sm font-medium text-[#7A7368]">
-                {filteredClubs.length} found
-              </span>
-            </div>
-          )}
-
-<section className="space-y-5">
+          <section className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {loading ? (
               <>
                 {[1, 2, 3].map((i) => (
@@ -566,7 +568,7 @@ export default function HomePage() {
                 ))}
               </>
             ) : filteredClubs.length === 0 ? (
-              <div className="rounded-[26px] border border-[#EDE4D8] bg-white p-8 shadow-[0_12px_28px_rgba(17,24,39,0.05)] text-center">
+              <div className="col-span-full rounded-[26px] border border-[#EDE4D8] bg-white p-8 shadow-[0_12px_28px_rgba(17,24,39,0.05)] text-center">
                 <p className="text-[32px]">🐾</p>
                 <p className="mt-2 text-[15px] font-semibold text-[#16386F]">No clubs found</p>
                 <p className="mt-1 text-[13px] text-[#7A7368]">Try changing the city or service filter</p>
