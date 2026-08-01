@@ -1,5 +1,5 @@
 "use client";
-import { useMemo, useRef, useState } from "react";
+import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -16,6 +16,10 @@ export default function ClubImageGallery({
   const touchStartX = useRef<number | null>(null);
   const touchEndX = useRef<number | null>(null);
   const [activeIndex, setActiveIndex] = useState(0);
+
+  useLayoutEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   const safeImages = useMemo(() => {
     const cleaned = images

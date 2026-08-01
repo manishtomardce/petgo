@@ -2,7 +2,7 @@
 
 import { ArrowLeft } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
 
 type ClubPreview = {
   name: string;
@@ -17,6 +17,10 @@ export default function ClubDetailsLoading() {
   const pathname = usePathname();
   const router = useRouter();
   const [preview, setPreview] = useState<ClubPreview | null>(null);
+
+  useLayoutEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   useEffect(() => {
     const id = pathname.split("/").pop();
