@@ -144,7 +144,20 @@ export default function ClubCard({ club }: { club: Club }) {
           )}
           <Link
             href={`/clubs/${club.id}`}
-            onClick={() => sessionStorage.setItem("petgo_listing_scroll", String(window.scrollY))}
+            onClick={() => {
+              sessionStorage.setItem("petgo_listing_scroll", String(window.scrollY));
+              sessionStorage.setItem(
+                `petgo_club_preview_${club.id}`,
+                JSON.stringify({
+                  name: club.name,
+                  city: club.city,
+                  area: club.area,
+                  cover_image: currentImage,
+                  rating: club.rating,
+                  review_count: club.review_count ?? null,
+                })
+              );
+            }}
             className="mt-4 block w-full rounded-full bg-[#16386F] py-2.5 text-center text-sm font-semibold text-white active:scale-[0.97] transition-all duration-150"
           >
             View Club
