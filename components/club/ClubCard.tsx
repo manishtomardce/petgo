@@ -78,7 +78,7 @@ export default function ClubCard({ club }: { club: Club }) {
   }
 
   return (
-    <article className="overflow-hidden rounded-[28px] border border-[#EEE7DC] bg-white shadow-[0_14px_34px_rgba(17,24,39,0.08)] hover:-translate-y-0.5 hover:shadow-[0_18px_40px_rgba(17,24,39,0.12)] transition-all duration-150">
+    <article className="flex h-full flex-col overflow-hidden rounded-[28px] border border-[#EEE7DC] bg-white shadow-[0_14px_34px_rgba(17,24,39,0.08)] hover:-translate-y-0.5 hover:shadow-[0_18px_40px_rgba(17,24,39,0.12)] transition-all duration-150">
 
         {/* IMAGE */}
         <div
@@ -110,7 +110,7 @@ export default function ClubCard({ club }: { club: Club }) {
         </div>
 
         {/* CONTENT */}
-        <div className="p-5">
+        <div className="flex flex-1 flex-col p-5">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <h3 className="truncate text-[20px] font-semibold text-[#16386F]">
@@ -142,26 +142,28 @@ export default function ClubCard({ club }: { club: Club }) {
               ))}
             </div>
           )}
-          <Link
-            href={`/clubs/${club.id}`}
-            onClick={() => {
-              sessionStorage.setItem("petgo_listing_scroll", String(window.scrollY));
-              sessionStorage.setItem(
-                `petgo_club_preview_${club.id}`,
-                JSON.stringify({
-                  name: club.name,
-                  city: club.city,
-                  area: club.area,
-                  cover_image: currentImage,
-                  rating: club.rating,
-                  review_count: club.review_count ?? null,
-                })
-              );
-            }}
-            className="mt-4 block w-full rounded-full bg-[#16386F] py-2.5 text-center text-sm font-semibold text-white active:scale-[0.97] transition-all duration-150"
-          >
-            View Club
-          </Link>
+          <div className="mt-auto pt-4">
+            <Link
+              href={`/clubs/${club.id}`}
+              onClick={() => {
+                sessionStorage.setItem("petgo_listing_scroll", String(window.scrollY));
+                sessionStorage.setItem(
+                  `petgo_club_preview_${club.id}`,
+                  JSON.stringify({
+                    name: club.name,
+                    city: club.city,
+                    area: club.area,
+                    cover_image: currentImage,
+                    rating: club.rating,
+                    review_count: club.review_count ?? null,
+                  })
+                );
+              }}
+              className="block w-full rounded-full bg-[#16386F] py-2.5 text-center text-sm font-semibold text-white active:scale-[0.97] transition-all duration-150"
+            >
+              View Club
+            </Link>
+          </div>
         </div>
     </article>
   );
