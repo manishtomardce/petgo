@@ -50,8 +50,8 @@ export default function BookingForm({
     normalizedServiceType === "cafe" || normalizedServiceType === "grooming";
 
   return (
-    <div className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm sm:p-5">
-      <h3 className="text-lg font-semibold text-neutral-900">Booking Details</h3>
+    <div className="rounded-[26px] border border-[#EDE4D8] bg-white p-4 shadow-[0_12px_28px_rgba(17,24,39,0.05)] sm:p-5">
+      <h3 className="text-lg font-semibold text-[#16386F]">Booking Details</h3>
 
       <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="sm:col-span-2">
@@ -62,7 +62,7 @@ export default function BookingForm({
             name="service"
             value={service}
             onChange={(e) => setService(e.target.value)}
-            className="w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 text-[16px] outline-none focus:border-[#CF8750]"
+            className="w-full rounded-2xl border border-[#E7DED1] bg-white px-4 py-3 text-[16px] outline-none focus:border-[#CF8750]"
             required
           >
             {services.map((item) => (
@@ -91,7 +91,7 @@ export default function BookingForm({
             name="pets_count"
             value={petsCount}
             onChange={(e) => setPetsCount(Math.max(1, Number(e.target.value) || 1))}
-            className="w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 text-[16px] outline-none focus:border-[#CF8750]"
+            className="w-full rounded-2xl border border-[#E7DED1] bg-white px-4 py-3 text-[16px] outline-none focus:border-[#CF8750]"
             required
           >
             {[1, 2, 3, 4, 5].map((count) => (
@@ -103,10 +103,10 @@ export default function BookingForm({
         </div>
       </div>
 
-      <div className="mt-6 border-t border-neutral-200 pt-6">
+      <div className="mt-6 border-t border-[#EDE4D8] pt-6">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-neutral-900">Pet Details</h3>
-          <span className="rounded-full bg-[#F6EEE7] px-3 py-1 text-xs font-medium text-[#8A5A34]">
+          <h3 className="text-lg font-semibold text-[#16386F]">Pet Details</h3>
+          <span className="rounded-full bg-[#FFF7E8] px-3 py-1 text-xs font-semibold text-[#9A6200]">
             {petsCount} {petsCount === 1 ? "pet" : "pets"}
           </span>
         </div>
@@ -115,13 +115,13 @@ export default function BookingForm({
           {pets.map((pet, index) => (
             <div
               key={index}
-              className="rounded-2xl border border-neutral-200 bg-[#fcfbf8] p-4"
+              className="rounded-2xl border border-[#EDE4D8] bg-[#FAF8F5] p-4"
             >
               <div className="mb-4 flex items-center justify-between">
-                <h4 className="text-base font-semibold text-neutral-900">
+                <h4 className="text-base font-semibold text-[#16386F]">
                   Pet {index + 1}
                 </h4>
-                <span className="rounded-full border border-neutral-200 bg-white px-2.5 py-1 text-xs font-medium text-neutral-600">
+                <span className="rounded-full border border-[#E7DED1] bg-white px-2.5 py-1 text-xs font-medium text-[#7A746C]">
                   Details
                 </span>
               </div>
@@ -137,7 +137,7 @@ export default function BookingForm({
                     value={pet.name}
                     onChange={(e) => updatePet(index, "name", e.target.value)}
                     required
-                    className="w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 text-[16px] outline-none focus:border-[#CF8750]"
+                    className="w-full rounded-2xl border border-[#E7DED1] bg-white px-4 py-3 text-[16px] outline-none focus:border-[#CF8750]"
                   />
                 </div>
 
@@ -150,7 +150,7 @@ export default function BookingForm({
                     placeholder="Enter breed"
                     value={pet.breed}
                     onChange={(e) => updatePet(index, "breed", e.target.value)}
-                    className="w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 text-[16px] outline-none focus:border-[#CF8750]"
+                    className="w-full rounded-2xl border border-[#E7DED1] bg-white px-4 py-3 text-[16px] outline-none focus:border-[#CF8750]"
                   />
                 </div>
 
@@ -161,7 +161,7 @@ export default function BookingForm({
                   <select
                     value={pet.size}
                     onChange={(e) => updatePet(index, "size", e.target.value)}
-                    className="w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 text-[16px] outline-none focus:border-[#CF8750]"
+                    className="w-full rounded-2xl border border-[#E7DED1] bg-white px-4 py-3 text-[16px] outline-none focus:border-[#CF8750]"
                   >
                     <option value="small">Small</option>
                     <option value="medium">Medium</option>
@@ -174,8 +174,8 @@ export default function BookingForm({
         </div>
       </div>
 
-      <div className="mt-6 border-t border-neutral-200 pt-6">
-        <h3 className="text-lg font-semibold text-neutral-900">Owner Details</h3>
+      <div className="mt-6 border-t border-[#EDE4D8] pt-6">
+        <h3 className="text-lg font-semibold text-[#16386F]">Owner Details</h3>
 
         <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
@@ -189,7 +189,7 @@ export default function BookingForm({
               value={ownerName}
               onChange={(e) => setOwnerName(e.target.value)}
               required
-              className="w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 text-[16px] outline-none focus:border-[#CF8750]"
+              className="w-full rounded-2xl border border-[#E7DED1] bg-white px-4 py-3 text-[16px] outline-none focus:border-[#CF8750]"
             />
           </div>
 
@@ -204,7 +204,7 @@ export default function BookingForm({
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               required
-              className="w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 text-[16px] outline-none focus:border-[#CF8750]"
+              className="w-full rounded-2xl border border-[#E7DED1] bg-white px-4 py-3 text-[16px] outline-none focus:border-[#CF8750]"
             />
           </div>
 
@@ -218,7 +218,7 @@ export default function BookingForm({
               placeholder="Anything the club should know?"
               value={instructions}
               onChange={(e) => setInstructions(e.target.value)}
-              className="w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 text-[16px] outline-none focus:border-[#CF8750]"
+              className="w-full rounded-2xl border border-[#E7DED1] bg-white px-4 py-3 text-[16px] outline-none focus:border-[#CF8750]"
             />
           </div>
         </div>

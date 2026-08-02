@@ -32,17 +32,42 @@ export default function ClubSummaryCard({
   const distanceText = formatDistance(club.distance_km);
 
   return (
-    <div className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm">
-      <div className="flex flex-col gap-4">
-        <div>
-          <h2 className="text-xl font-semibold text-neutral-900">{club.name}</h2>
+    <div className="overflow-hidden rounded-[26px] border border-[#EDE4D8] bg-white shadow-[0_12px_28px_rgba(17,24,39,0.05)]">
+      <div className="flex gap-4 p-4">
+        {club.cover_image && (
+          <img
+            src={club.cover_image}
+            alt={club.name}
+            className="h-20 w-20 shrink-0 rounded-2xl object-cover"
+            draggable={false}
+          />
+        )}
 
-          <p className="mt-1 text-sm text-neutral-600">
+        <div className="min-w-0 flex-1">
+          <h2 className="truncate text-lg font-semibold text-[#16386F]">
+            {club.name}
+          </h2>
+
+          <p className="mt-0.5 text-sm text-[#7A746C]">
             {[club.area, club.city].filter(Boolean).join(", ")}
           </p>
-        </div>
 
-        <div className="flex flex-wrap gap-2">
+          <div className="mt-1.5 flex flex-wrap items-center gap-3 text-xs text-[#7A746C]">
+            {club.rating ? (
+              <span>
+                ⭐ {club.rating} ({club.review_count ?? 0} reviews)
+              </span>
+            ) : null}
+
+            {distanceText ? (
+              <span className="font-medium">{distanceText}</span>
+            ) : null}
+          </div>
+        </div>
+      </div>
+
+      {services.length > 0 && (
+        <div className="flex flex-wrap gap-2 border-t border-[#EDE4D8] px-4 py-3">
           {services.map((item) => {
             const isActive =
               item.trim().toLowerCase() === selectedService.trim().toLowerCase();
@@ -50,10 +75,10 @@ export default function ClubSummaryCard({
             return (
               <span
                 key={item}
-                className={`rounded-full px-3 py-1 text-xs font-medium capitalize ${
+                className={`rounded-full px-3 py-1.5 text-xs font-semibold capitalize transition-colors ${
                   isActive
-                    ? "bg-[#F6EEE7] text-[#8A5A34]"
-                    : "bg-[#F6EEE7] text-[#8A5A34]"
+                    ? "bg-[#16386F] text-white"
+                    : "bg-[#FFF7E8] text-[#9A6200]"
                 }`}
               >
                 {item}
@@ -61,19 +86,7 @@ export default function ClubSummaryCard({
             );
           })}
         </div>
-
-        <div className="flex flex-wrap items-center gap-3 text-sm text-neutral-600">
-          {club.rating ? (
-            <span>
-              ⭐ {club.rating} ({club.review_count ?? 0} reviews)
-            </span>
-          ) : null}
-
-          {distanceText ? (
-            <span className="font-medium text-neutral-600">{distanceText}</span>
-          ) : null}
-        </div>
-      </div>
+      )}
     </div>
   );
 }

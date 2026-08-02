@@ -265,7 +265,16 @@ export default async function ClubDetailsPage({
           </div>
 
           <div className="w-[160px]">
-            <BookNowButton clubId={club.id} />
+            <BookNowButton
+              clubId={club.id}
+              clubName={club.name}
+              city={club.city}
+              area={club.area}
+              coverImage={images[0] ?? null}
+              rating={club.rating}
+              reviewCount={club.review_count}
+              services={services}
+            />
           </div>
         </div>
       </div>

@@ -377,7 +377,7 @@ export default function BookingPageClient({
   };
 
   return (
-    <main className="min-h-screen bg-[#faf7f2] px-4 py-6">
+    <main className="min-h-screen bg-[#FAF8F5] px-4 py-6">
       <form
         ref={formRef}
         className="mx-auto max-w-3xl space-y-4"
@@ -387,7 +387,7 @@ export default function BookingPageClient({
         }}
       >
         <div>
-          <h1 className="text-2xl font-bold text-neutral-900">Book Now</h1>
+          <h1 className="text-2xl font-bold text-[#16386F]">Book Now</h1>
         </div>
 
         <ClubSummaryCard
@@ -434,11 +434,11 @@ export default function BookingPageClient({
         <button
           type="submit"
           disabled={loading}
-          className="w-full rounded-2xl bg-[#CF8750] px-4 py-4 text-base font-semibold text-white shadow-[0_12px_30px_rgba(207,135,80,0.28)] transition hover:-translate-y-[1px] hover:shadow-[0_16px_34px_rgba(207,135,80,0.34)] disabled:opacity-60"
+          className="w-full rounded-2xl bg-[#CF8750] px-4 py-4 text-base font-semibold text-white shadow-[0_12px_30px_rgba(207,135,80,0.28)] transition-all duration-150 active:scale-[0.98] hover:-translate-y-[1px] hover:shadow-[0_16px_34px_rgba(207,135,80,0.34)] disabled:opacity-60 disabled:active:scale-100"
         >
           {loading ? "Submitting..." : "Confirm Booking"}
         </button>
-        <div className="flex items-center justify-between gap-3 rounded-2xl border border-black/70 bg-white px-4 py-4">
+        <div className="flex items-center justify-between gap-3 rounded-2xl border border-[#EDE4D8] bg-white px-4 py-4">
           <p className="text-sm font-medium text-neutral-800">
             Need help before booking?
           </p>

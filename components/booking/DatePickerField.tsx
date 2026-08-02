@@ -80,7 +80,7 @@ export default function DatePickerField({
         <label className="mb-1.5 block text-sm font-medium text-neutral-700">
           {label}
         </label>
-        <div className="flex w-full items-center justify-between rounded-xl border border-neutral-300 bg-white px-4 py-3 text-left text-[16px] text-neutral-400">
+        <div className="flex w-full items-center justify-between rounded-2xl border border-[#E7DED1] bg-white px-4 py-3 text-left text-[16px] text-neutral-400">
           <span>{value || "YYYY-MM-DD"}</span>
           <span className="text-neutral-500">📅</span>
         </div>
@@ -98,7 +98,7 @@ export default function DatePickerField({
       <button
         type="button"
         onClick={() => setOpen((prev) => !prev)}
-        className="flex w-full items-center justify-between rounded-xl border border-neutral-300 bg-white px-4 py-3 text-left text-[16px] text-neutral-900 outline-none focus:border-[#CF8750]"
+        className="flex w-full items-center justify-between rounded-2xl border border-[#E7DED1] bg-white px-4 py-3 text-left text-[16px] text-neutral-900 outline-none focus:border-[#CF8750]"
       >
         <span className={inputValue ? "text-neutral-900" : "text-neutral-400"}>
           {inputValue || "YYYY-MM-DD"}

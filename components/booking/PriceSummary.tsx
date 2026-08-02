@@ -18,10 +18,10 @@ export default function PriceSummary({
   bookingUnitLabel,
 }: PriceSummaryProps) {
   return (
-    <div className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm">
-      <h3 className="text-lg font-semibold text-neutral-900">Price Summary</h3>
+    <div className="rounded-[26px] border border-[#EDE4D8] bg-white p-4 shadow-[0_12px_28px_rgba(17,24,39,0.05)] sm:p-5">
+      <h3 className="text-lg font-semibold text-[#16386F]">Price Summary</h3>
 
-      <div className="mt-4 space-y-3 text-sm text-neutral-700">
+      <div className="mt-4 space-y-3 text-sm text-[#4A433D]">
         <div className="flex items-center justify-between">
           <span className="capitalize">{selectedService} price</span>
           <span>
@@ -47,8 +47,8 @@ export default function PriceSummary({
           <span>₹{subtotal}</span>
         </div>
 
-        <div className="border-t border-neutral-200 pt-3">
-          <div className="flex items-center justify-between text-base font-bold text-neutral-900">
+        <div className="border-t border-[#EDE4D8] pt-3">
+          <div className="flex items-center justify-between text-base font-bold text-[#16386F]">
             <span>Total</span>
             <span>₹{total}</span>
           </div>
