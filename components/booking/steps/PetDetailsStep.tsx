@@ -1,5 +1,7 @@
 "use client";
 
+import { DOG_BREEDS, PET_SIZE_OPTIONS } from "../dogBreeds";
+
 type PetFormItem = {
   name: string;
   breed: string;
@@ -80,13 +82,41 @@ export default function PetDetailsStep({
                 <label className="mb-1.5 block text-sm font-medium text-neutral-700">
                   Breed
                 </label>
-                <input
-                  type="text"
-                  placeholder="Enter breed"
-                  value={pet.breed}
-                  onChange={(e) => updatePet(index, "breed", e.target.value)}
+                <select
+                  value={
+                    DOG_BREEDS.slice(0, -1).includes(
+                      pet.breed as (typeof DOG_BREEDS)[number]
+                    )
+                      ? pet.breed
+                      : "Other"
+                  }
+                  onChange={(e) =>
+                    updatePet(
+                      index,
+                      "breed",
+                      e.target.value === "Other" ? "" : e.target.value
+                    )
+                  }
                   className="w-full rounded-2xl border border-[#E7DED1] bg-white px-4 py-3 text-[16px] outline-none focus:border-[#CF8750]"
-                />
+                >
+                  {DOG_BREEDS.map((breed) => (
+                    <option key={breed} value={breed}>
+                      {breed}
+                    </option>
+                  ))}
+                </select>
+
+                {!DOG_BREEDS.slice(0, -1).includes(
+                  pet.breed as (typeof DOG_BREEDS)[number]
+                ) && (
+                  <input
+                    type="text"
+                    placeholder="Enter breed"
+                    value={pet.breed}
+                    onChange={(e) => updatePet(index, "breed", e.target.value)}
+                    className="mt-2 w-full rounded-2xl border border-[#E7DED1] bg-white px-4 py-3 text-[16px] outline-none focus:border-[#CF8750]"
+                  />
+                )}
               </div>
 
               <div className="sm:col-span-2">
@@ -98,9 +128,11 @@ export default function PetDetailsStep({
                   onChange={(e) => updatePet(index, "size", e.target.value)}
                   className="w-full rounded-2xl border border-[#E7DED1] bg-white px-4 py-3 text-[16px] outline-none focus:border-[#CF8750]"
                 >
-                  <option value="small">Small</option>
-                  <option value="medium">Medium</option>
-                  <option value="large">Large</option>
+                  {PET_SIZE_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>
