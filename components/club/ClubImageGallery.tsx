@@ -8,14 +8,18 @@ type ClubImageGalleryProps = {
   clubName: string;
 };
 
+const SWIPE_THRESHOLD = 50;
+const EDGE_RESISTANCE = 0.35;
+
 export default function ClubImageGallery({
   images,
   clubName,
 }: ClubImageGalleryProps) {
   const router = useRouter();
   const touchStartX = useRef<number | null>(null);
-  const touchEndX = useRef<number | null>(null);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [dragOffset, setDragOffset] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
 
   useLayoutEffect(() => {
     window.scrollTo(0, 0);
@@ -28,6 +32,8 @@ export default function ClubImageGallery({
     return cleaned.length > 0 ? cleaned : ["/placeholder-club.jpg"];
   }, [images]);
 
+  const hasMultipleImages = safeImages.length > 1;
+
   const goPrev = () => {
     setActiveIndex((prev) => (prev > 0 ? prev - 1 : prev));
   };
@@ -39,18 +45,42 @@ export default function ClubImageGallery({
   };
 
   const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
-    touchStartX.current = e.changedTouches[0].clientX;
+    if (!hasMultipleImages) return;
+    touchStartX.current = e.touches[0].clientX;
+    setIsDragging(true);
   };
 
-  const handleTouchEnd = (e: React.TouchEvent<HTMLDivElement>) => {
-    touchEndX.current = e.changedTouches[0].clientX;
-    if (touchStartX.current === null || touchEndX.current === null) return;
-    const deltaX = touchStartX.current - touchEndX.current;
-    const minSwipeDistance = 50;
-    if (deltaX > minSwipeDistance) goNext();
-    else if (deltaX < -minSwipeDistance) goPrev();
+  const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (!hasMultipleImages || touchStartX.current === null) return;
+
+    let delta = e.touches[0].clientX - touchStartX.current;
+    const atFirstImage = activeIndex === 0;
+    const atLastImage = activeIndex === safeImages.length - 1;
+
+    if ((atFirstImage && delta > 0) || (atLastImage && delta < 0)) {
+      delta *= EDGE_RESISTANCE;
+    }
+
+    setDragOffset(delta);
+  };
+
+  const handleTouchEnd = () => {
+    if (!hasMultipleImages || touchStartX.current === null) return;
+
+    if (dragOffset < -SWIPE_THRESHOLD) goNext();
+    else if (dragOffset > SWIPE_THRESHOLD) goPrev();
+
+    setDragOffset(0);
+    setIsDragging(false);
     touchStartX.current = null;
-    touchEndX.current = null;
+  };
+
+  const handleImageTap = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!hasMultipleImages) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    if (clickX < rect.width / 2) goPrev();
+    else goNext();
   };
 
   return (
@@ -61,15 +91,31 @@ export default function ClubImageGallery({
           height: "calc(50vh + env(safe-area-inset-top))",
           marginTop: "calc(-1 * env(safe-area-inset-top))",
         }}
-        onTouchStart={handleTouchStart}
-        onTouchEnd={handleTouchEnd}
       >
-        <img
-          src={safeImages[activeIndex]}
-          alt={`${clubName} image ${activeIndex + 1}`}
-          className="h-full w-full object-cover object-center"
-          draggable={false}
-        />
+        <div
+          className="flex h-full w-full"
+          style={{
+            transform: `translateX(calc(${-activeIndex * 100}% + ${dragOffset}px))`,
+            transition: isDragging
+              ? "none"
+              : "transform 400ms cubic-bezier(0.22, 1, 0.36, 1)",
+          }}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+          onClick={handleImageTap}
+        >
+          {safeImages.map((src, index) => (
+            <img
+              key={`${src}-${index}`}
+              src={src}
+              alt={`${clubName} image ${index + 1}`}
+              className="h-full w-full shrink-0 select-none object-cover object-center"
+              draggable={false}
+            />
+          ))}
+        </div>
+
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/20 to-transparent" />
 
         <div
@@ -86,14 +132,14 @@ export default function ClubImageGallery({
           </button>
         </div>
 
-        {safeImages.length > 1 ? (
-          <div className="absolute bottom-4 left-1/2 z-20 flex -translate-x-1/2 items-center gap-2 rounded-full bg-black/20 px-3 py-2 backdrop-blur-sm">
+        {hasMultipleImages ? (
+          <div className="pointer-events-none absolute bottom-4 left-1/2 z-20 flex -translate-x-1/2 items-center gap-2 rounded-full bg-black/20 px-3 py-2 backdrop-blur-sm">
             {safeImages.map((_, index) => (
               <button
                 key={`dot-${index}`}
                 type="button"
                 onClick={() => setActiveIndex(index)}
-                className={`rounded-full transition-all ${
+                className={`pointer-events-auto rounded-full transition-all ${
                   activeIndex === index
                     ? "h-2 w-5 bg-white"
                     : "h-2 w-2 bg-white/70"
@@ -104,8 +150,8 @@ export default function ClubImageGallery({
           </div>
         ) : null}
 
-        {safeImages.length > 1 ? (
-          <div className="absolute bottom-4 right-4 z-20 rounded-full bg-black/50 px-3 py-1 text-sm font-medium text-white">
+        {hasMultipleImages ? (
+          <div className="pointer-events-none absolute bottom-4 right-4 z-20 rounded-full bg-black/50 px-3 py-1 text-sm font-medium text-white">
             {activeIndex + 1}/{safeImages.length}
           </div>
         ) : null}

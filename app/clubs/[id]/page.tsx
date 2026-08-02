@@ -84,22 +84,22 @@ export default async function ClubDetailsPage({
 
       <div className="space-y-8 px-4 pt-5">
         <div>
-          <h1 className="text-[26px] font-semibold text-neutral-900">
+          <h1 className="text-[26px] font-semibold text-[#16386F]">
             {club.name}
           </h1>
 
-          <p className="mt-1 text-sm text-neutral-500">
+          <p className="mt-1 text-sm text-[#7A746C]">
             {[club.area, club.city].filter(Boolean).join(", ")}
           </p>
 
-          <p className="mt-2 text-sm text-neutral-700">
+          <p className="mt-2 text-sm text-[#7A746C]">
             ⭐ {club.rating ?? "New"} · {club.review_count ?? 0} reviews
           </p>
         </div>
 
         {services.length > 0 && (
           <div>
-            <h2 className="mb-3 text-lg font-semibold text-neutral-900">
+            <h2 className="mb-3 text-lg font-semibold text-[#16386F]">
               Services
             </h2>
 
@@ -107,7 +107,7 @@ export default async function ClubDetailsPage({
               {services.map((service: string, index: number) => (
                 <span
                   key={`${service}-${index}`}
-                  className="rounded-full bg-[#F5EFE8] px-5 py-2 text-sm font-medium capitalize text-[#8A5A34]"
+                  className="rounded-full bg-[#FFF7E8] px-5 py-2 text-sm font-semibold capitalize text-[#9A6200]"
                 >
                   {service}
                 </span>
@@ -117,11 +117,11 @@ export default async function ClubDetailsPage({
         )}
 
         <div>
-          <h2 className="mb-3 text-lg font-semibold text-neutral-900">
+          <h2 className="mb-3 text-lg font-semibold text-[#16386F]">
             Pricing
           </h2>
 
-          <div className="space-y-3 text-sm text-neutral-700">
+          <div className="space-y-3 text-sm text-[#4A433D]">
             {club.pool_price && (
               <div className="flex justify-between">
                 <span>Pool</span>
@@ -161,7 +161,7 @@ export default async function ClubDetailsPage({
 
         {amenities.length > 0 && (
           <div>
-            <h2 className="mb-3 text-lg font-semibold text-neutral-900">
+            <h2 className="mb-3 text-lg font-semibold text-[#16386F]">
               Amenities
             </h2>
 
@@ -169,7 +169,7 @@ export default async function ClubDetailsPage({
               {amenities.map((amenity: string, index: number) => (
                 <div
                   key={`${amenity}-${index}`}
-                  className="rounded-xl border border-neutral-200 bg-white px-4 py-3 text-sm text-neutral-700"
+                  className="rounded-xl border border-[#EDE4D8] bg-white px-4 py-3 text-sm text-[#4A433D]"
                 >
                   ✔ {amenity}
                 </div>
@@ -180,7 +180,7 @@ export default async function ClubDetailsPage({
 
         {policies.length > 0 && (
           <div>
-            <h2 className="mb-3 text-lg font-semibold text-neutral-900">
+            <h2 className="mb-3 text-lg font-semibold text-[#16386F]">
               Policies
             </h2>
 
@@ -188,7 +188,7 @@ export default async function ClubDetailsPage({
               {policies.map((policy: string, index: number) => (
                 <div
                   key={`${policy}-${index}`}
-                  className="rounded-xl border border-neutral-200 bg-white px-4 py-3 text-sm text-neutral-700"
+                  className="rounded-xl border border-[#EDE4D8] bg-white px-4 py-3 text-sm text-[#4A433D]"
                 >
                   • {policy}
                 </div>
@@ -200,7 +200,7 @@ export default async function ClubDetailsPage({
         {(club.area || club.city || club.latitude || club.longitude) && (
           <div>
             <div className="mb-3 flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-neutral-900">
+              <h2 className="text-lg font-semibold text-[#16386F]">
                 Location
               </h2>
 
@@ -209,14 +209,14 @@ export default async function ClubDetailsPage({
                   href={club.google_maps_link}
                   target="_blank"
                   rel="noreferrer"
-                  className="text-sm font-medium text-[#8A5A34]"
+                  className="text-sm font-semibold text-[#16386F]"
                 >
                   Open map
                 </a>
               )}
             </div>
 
-            <div className="overflow-hidden rounded-[22px] border border-neutral-200 bg-white shadow-sm">
+            <div className="overflow-hidden rounded-[22px] border border-[#EDE4D8] bg-white shadow-[0_12px_28px_rgba(17,24,39,0.05)]">
               <div className="h-[240px] w-full bg-neutral-100">
                 <iframe
                   title={`${club.name} location map`}
@@ -228,12 +228,12 @@ export default async function ClubDetailsPage({
               </div>
 
               <div className="px-4 py-4">
-                <p className="text-sm font-medium text-neutral-900">
+                <p className="text-sm font-medium text-[#16386F]">
                   {[club.area, club.city].filter(Boolean).join(", ")}
                 </p>
 
                 {club.address ? (
-                  <p className="mt-1 text-sm text-neutral-500">
+                  <p className="mt-1 text-sm text-[#7A746C]">
                     {club.address}
                   </p>
                 ) : null}
@@ -244,22 +244,22 @@ export default async function ClubDetailsPage({
 
         {club.timings && (
           <div>
-            <h2 className="mb-2 text-lg font-semibold text-neutral-900">
+            <h2 className="mb-2 text-lg font-semibold text-[#16386F]">
               Timings
             </h2>
 
-            <div className="rounded-[22px] border border-neutral-200 bg-white px-4 py-4 text-sm leading-7 text-neutral-600">
+            <div className="rounded-[22px] border border-[#EDE4D8] bg-white px-4 py-4 text-sm leading-7 text-[#4A433D]">
               <p className="whitespace-pre-line">{club.timings}</p>
             </div>
           </div>
         )}
       </div>
 
-      <div className="fixed bottom-0 left-0 z-30 w-full border-t border-neutral-200 bg-white/95 px-4 py-4 backdrop-blur">
+      <div className="fixed bottom-0 left-0 z-30 w-full border-t border-[#EDE4D8] bg-white/95 px-4 py-4 backdrop-blur">
         <div className="mx-auto flex max-w-5xl items-center justify-between">
           <div>
-            <p className="text-sm text-neutral-500">Starting from</p>
-            <p className="text-xl font-semibold text-neutral-900">
+            <p className="text-sm text-[#7A746C]">Starting from</p>
+            <p className="text-xl font-semibold text-[#16386F]">
               ₹{startingPrice ?? "--"}
             </p>
           </div>

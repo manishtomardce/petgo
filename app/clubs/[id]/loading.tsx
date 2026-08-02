@@ -73,13 +73,13 @@ export default function ClubDetailsLoading() {
         <div>
           {preview ? (
             <>
-              <h1 className="text-[26px] font-semibold text-neutral-900">
+              <h1 className="text-[26px] font-semibold text-[#16386F]">
                 {preview.name}
               </h1>
-              <p className="mt-1 text-sm text-neutral-500">
+              <p className="mt-1 text-sm text-[#7A746C]">
                 {[preview.area, preview.city].filter(Boolean).join(", ")}
               </p>
-              <p className="mt-2 text-sm text-neutral-700">
+              <p className="mt-2 text-sm text-[#7A746C]">
                 ⭐ {preview.rating ?? "New"} · {preview.review_count ?? 0} reviews
               </p>
             </>
