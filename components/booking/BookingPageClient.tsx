@@ -361,14 +361,32 @@ export default function BookingPageClient({
                 .join(", ")}`
             : result.error || "Failed to save booking"
         );
+        setLoading(false);
         return;
       }
 
+      sessionStorage.setItem(
+        `petgo_confirmation_preview_${result.bookingId}`,
+        JSON.stringify({
+          club_name: clubName,
+          club_id: clubId,
+          owner_name: trimmedOwnerName,
+          phone: trimmedPhone,
+          service: service.trim(),
+          service_type: serviceType,
+          pet_name: finalPets[0]?.name || "",
+          check_in: checkInValue,
+          check_out: hideCheckout ? null : checkOutValue,
+          instructions: instructions.trim() || "",
+        })
+      );
+
+      // keep the button in its loading state through the navigation itself,
+      // so it doesn't flash back to normal right before the page swaps
       router.push(`/booking-confirmation/${result.bookingId}`);
     } catch (error) {
       console.error(error);
       alert("Something went wrong while submitting booking");
-    } finally {
       setLoading(false);
     }
   };
@@ -416,7 +434,7 @@ export default function BookingPageClient({
               onClick={goToStep2}
               className="w-full rounded-2xl bg-[#CF8750] px-4 py-4 text-base font-semibold text-white shadow-[0_12px_30px_rgba(207,135,80,0.28)] transition-all duration-150 active:scale-[0.98] hover:-translate-y-[1px] hover:shadow-[0_16px_34px_rgba(207,135,80,0.34)]"
             >
-              Next: Pets Details
+              Next: Pet Details
             </button>
 
             <ChatHelpBar whatsappSupportUrl={whatsappSupportUrl} />
@@ -484,9 +502,12 @@ export default function BookingPageClient({
                 type="button"
                 onClick={handleSubmit}
                 disabled={loading}
-                className="flex-1 rounded-2xl bg-[#CF8750] px-4 py-4 text-base font-semibold text-white shadow-[0_12px_30px_rgba(207,135,80,0.28)] transition-all duration-150 active:scale-[0.98] hover:-translate-y-[1px] hover:shadow-[0_16px_34px_rgba(207,135,80,0.34)] disabled:opacity-60 disabled:active:scale-100"
+                className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-[#CF8750] px-4 py-4 text-base font-semibold text-white shadow-[0_12px_30px_rgba(207,135,80,0.28)] transition-all duration-150 active:scale-[0.98] hover:-translate-y-[1px] hover:shadow-[0_16px_34px_rgba(207,135,80,0.34)] disabled:opacity-80 disabled:active:scale-100 disabled:hover:translate-y-0 disabled:hover:shadow-[0_12px_30px_rgba(207,135,80,0.28)]"
               >
-                {loading ? "Submitting..." : "Confirm Booking"}
+                {loading && (
+                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+                )}
+                {loading ? "Confirming..." : "Confirm Booking"}
               </button>
             </div>
 

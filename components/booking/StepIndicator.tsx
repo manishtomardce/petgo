@@ -4,7 +4,7 @@ type StepIndicatorProps = {
 
 const STEPS = [
   { step: 1, label: "Service Details" },
-  { step: 2, label: "Pets Details" },
+  { step: 2, label: "Pet Details" },
   { step: 3, label: "Owner Details" },
 ] as const;
 
