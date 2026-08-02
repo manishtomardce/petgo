@@ -128,6 +128,12 @@ export default function ClubCard({ club }: { club: Club }) {
             </div>
             <div className="shrink-0 rounded-full bg-[#FFF4DA] px-3 py-1.5 text-xs font-semibold text-[#8A5A00]">
               ⭐ {club.rating ?? "4.5"}
+              {club.review_count != null && (
+                <span className="font-medium text-[#8A5A00]/70">
+                  {" "}
+                  ({club.review_count})
+                </span>
+              )}
             </div>
           </div>
           {serviceList.length > 0 && (
