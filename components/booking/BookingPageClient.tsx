@@ -416,7 +416,7 @@ export default function BookingPageClient({
               onClick={goToStep2}
               className="w-full rounded-2xl bg-[#CF8750] px-4 py-4 text-base font-semibold text-white shadow-[0_12px_30px_rgba(207,135,80,0.28)] transition-all duration-150 active:scale-[0.98] hover:-translate-y-[1px] hover:shadow-[0_16px_34px_rgba(207,135,80,0.34)]"
             >
-              Next: Pet Details
+              Next: Pets Details
             </button>
 
             <ChatHelpBar whatsappSupportUrl={whatsappSupportUrl} />

@@ -22,7 +22,7 @@ export default function PetDetailsStep({
   return (
     <div className="rounded-[26px] border border-[#EDE4D8] bg-white p-4 shadow-[0_12px_28px_rgba(17,24,39,0.05)] sm:p-5">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-[#16386F]">Pet Details</h3>
+        <h3 className="text-lg font-semibold text-[#16386F]">Pets Details</h3>
         <span className="rounded-full bg-[#FFF7E8] px-3 py-1 text-xs font-semibold text-[#9A6200]">
           {petsCount} {petsCount === 1 ? "pet" : "pets"}
         </span>

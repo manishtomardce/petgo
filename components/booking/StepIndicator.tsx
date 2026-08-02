@@ -3,9 +3,9 @@ type StepIndicatorProps = {
 };
 
 const STEPS = [
-  { step: 1, label: "Booking" },
-  { step: 2, label: "Pets" },
-  { step: 3, label: "Owner" },
+  { step: 1, label: "Service Details" },
+  { step: 2, label: "Pets Details" },
+  { step: 3, label: "Owner Details" },
 ] as const;
 
 export default function StepIndicator({ currentStep }: StepIndicatorProps) {
