@@ -9,6 +9,7 @@ type DatePickerFieldProps = {
   label: string;
   required?: boolean;
   value?: string;
+  onChange?: (value: string) => void;
 };
 
 function formatDate(date: Date) {
@@ -40,6 +41,7 @@ export default function DatePickerField({
   label,
   required = false,
   value = "",
+  onChange,
 }: DatePickerFieldProps) {
   const [mounted, setMounted] = useState(false);
   const [inputValue, setInputValue] = useState(value);
@@ -116,9 +118,11 @@ export default function DatePickerField({
             defaultMonth={selected ?? new Date()}
             onSelect={(date) => {
               if (!date) return;
+              const formatted = formatDate(date);
               setSelected(date);
-              setInputValue(formatDate(date));
+              setInputValue(formatted);
               setOpen(false);
+              onChange?.(formatted);
             }}
           />
         </div>

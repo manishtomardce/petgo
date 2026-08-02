@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import BookingForm from "./BookingForm";
 import ClubSummaryCard from "./ClubSummaryCard";
-import PriceSummary from "./PriceSummary";
+import StepIndicator from "./StepIndicator";
+import BookingDetailsStep from "./steps/BookingDetailsStep";
+import PetDetailsStep from "./steps/PetDetailsStep";
+import OwnerDetailsStep from "./steps/OwnerDetailsStep";
 
 type Club = {
   id: string | number;
@@ -36,6 +38,8 @@ type BookingPageClientProps = {
   club: Club;
   initialService?: string;
 };
+
+type Step = 1 | 2 | 3;
 
 function parseServices(services: Club["services"]) {
   if (!services) return [];
@@ -122,16 +126,57 @@ function createEmptyPet(): PetFormItem {
   };
 }
 
+function ChatHelpBar({ whatsappSupportUrl }: { whatsappSupportUrl: string }) {
+  return (
+    <div className="flex items-center justify-between gap-3 rounded-2xl border border-[#EDE4D8] bg-white px-4 py-4">
+      <p className="text-sm font-medium text-neutral-800">
+        Need help before booking?
+      </p>
+
+      <a
+        href={whatsappSupportUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        style={{
+          background: "#25D366",
+          color: "#ffffff",
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.background = "#1ebe5d";
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.background = "#25D366";
+        }}
+        className="inline-flex shrink-0 items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold whitespace-nowrap shadow-md transition"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 32 32"
+          className="h-4 w-4"
+          aria-hidden="true"
+        >
+          <path
+            fill="currentColor"
+            d="M16 .4C7.4.4.4 7.4.4 16c0 2.8.7 5.5 2.1 7.9L.3 31.7l8-2.1c2.3 1.3 4.9 2 7.7 2 8.6 0 15.6-7 15.6-15.6S24.6.4 16 .4zm0 28.5c-2.4 0-4.7-.6-6.7-1.8l-.5-.3-4.7 1.2 1.3-4.6-.3-.5c-1.3-2.1-2-4.5-2-6.9 0-7.3 5.9-13.2 13.2-13.2S29.2 8.7 29.2 16 23.3 28.9 16 28.9zm7.3-9.8c-.4-.2-2.2-1.1-2.5-1.2-.3-.1-.6-.2-.8.2s-.9 1.2-1.1 1.5c-.2.2-.4.3-.7.1-.4-.2-1.5-.6-2.8-1.9-1-1-1.7-2.2-1.9-2.6-.2-.4 0-.6.2-.8.2-.2.4-.5.6-.7.2-.2.3-.4.4-.6.1-.2.1-.5 0-.7s-.8-2-1.1-2.7c-.3-.7-.6-.6-.8-.6h-.7c-.2 0-.7.1-1 .5s-1.3 1.2-1.3 2.9 1.3 3.4 1.5 3.6c.2.2 2.6 4 6.3 5.6.9.4 1.6.6 2.1.8.9.3 1.7.2 2.3.1.7-.1 2.2-.9 2.5-1.7.3-.8.3-1.5.2-1.7-.1-.2-.3-.3-.7-.5z"
+          />
+        </svg>
+
+        <span>Chat</span>
+      </a>
+    </div>
+  );
+}
+
 export default function BookingPageClient({
   club,
   initialService = "",
 }: BookingPageClientProps) {
   const router = useRouter();
-  const formRef = useRef<HTMLFormElement>(null);
 
   const services = parseServices(club.services);
   const fallbackService = services[0] || "boarding";
 
+  const [step, setStep] = useState<Step>(1);
   const [service, setService] = useState(initialService || fallbackService);
   const [petsCount, setPetsCount] = useState(1);
   const [pets, setPets] = useState<PetFormItem[]>([createEmptyPet()]);
@@ -147,54 +192,6 @@ export default function BookingPageClient({
 
   const clubName = club.name || club.club_name || "Pet Club";
   const clubId = String(club.id || "").trim();
-
-  useEffect(() => {
-    setPets((current) => {
-      if (current.length === petsCount) return current;
-
-      if (current.length < petsCount) {
-        return [
-          ...current,
-          ...Array.from({ length: petsCount - current.length }, () =>
-            createEmptyPet()
-          ),
-        ];
-      }
-
-      return current.slice(0, petsCount);
-    });
-  }, [petsCount]);
-
-  useEffect(() => {
-    const form = formRef.current;
-    if (!form) return;
-
-    const checkInInput = form.elements.namedItem(
-      "check_in"
-    ) as HTMLInputElement | null;
-    const checkOutInput = form.elements.namedItem(
-      "check_out"
-    ) as HTMLInputElement | null;
-
-    const syncValues = () => {
-      setCheckInValue(checkInInput?.value?.trim() || "");
-      setCheckOutValue(checkOutInput?.value?.trim() || "");
-    };
-
-    syncValues();
-
-    checkInInput?.addEventListener("input", syncValues);
-    checkInInput?.addEventListener("change", syncValues);
-    checkOutInput?.addEventListener("input", syncValues);
-    checkOutInput?.addEventListener("change", syncValues);
-
-    return () => {
-      checkInInput?.removeEventListener("input", syncValues);
-      checkInInput?.removeEventListener("change", syncValues);
-      checkOutInput?.removeEventListener("input", syncValues);
-      checkOutInput?.removeEventListener("change", syncValues);
-    };
-  }, [serviceType]);
 
   const pricePerUnit = useMemo(() => {
     return getPriceForService(club, service);
@@ -212,9 +209,7 @@ export default function BookingPageClient({
     return pricePerUnit * numberOfUnits * petsCount;
   }, [pricePerUnit, numberOfUnits, petsCount]);
 
-  const total = useMemo(() => {
-    return subtotal;
-  }, [subtotal]);
+  const total = subtotal;
 
   const updatePet = (index: number, key: keyof PetFormItem, value: string) => {
     setPets((current) =>
@@ -222,6 +217,25 @@ export default function BookingPageClient({
         petIndex === index ? { ...pet, [key]: value } : pet
       )
     );
+  };
+
+  const handleSetPetsCount = (count: number) => {
+    const nextCount = Math.max(1, count);
+    setPetsCount(nextCount);
+    setPets((current) => {
+      if (current.length === nextCount) return current;
+
+      if (current.length < nextCount) {
+        return [
+          ...current,
+          ...Array.from({ length: nextCount - current.length }, () =>
+            createEmptyPet()
+          ),
+        ];
+      }
+
+      return current.slice(0, nextCount);
+    });
   };
 
   const whatsappSupportUrl = useMemo(() => {
@@ -234,86 +248,69 @@ export default function BookingPageClient({
     return `https://wa.me/919667078411?text=${supportMessage}`;
   }, [clubName, service, checkInValue]);
 
+  const goToStep2 = () => {
+    if (!service.trim()) {
+      alert("Please select service");
+      return;
+    }
+
+    if (!checkInValue) {
+      alert("Please select check-in date");
+      return;
+    }
+
+    if (!isValidDateString(checkInValue)) {
+      alert("Invalid check-in date");
+      return;
+    }
+
+    if (!hideCheckout && !checkOutValue) {
+      alert("Please select check-out date");
+      return;
+    }
+
+    if (!hideCheckout && !isValidDateString(checkOutValue)) {
+      alert("Invalid check-out date");
+      return;
+    }
+
+    setStep(2);
+    window.scrollTo(0, 0);
+  };
+
+  const goToStep3 = () => {
+    const firstMissingPetIndex = pets
+      .slice(0, petsCount)
+      .findIndex((pet) => !pet.name.trim());
+
+    if (firstMissingPetIndex !== -1) {
+      alert(`Please enter pet name for pet ${firstMissingPetIndex + 1}`);
+      return;
+    }
+
+    setStep(3);
+    window.scrollTo(0, 0);
+  };
+
+  const goBack = () => {
+    setStep((current) => (current > 1 ? ((current - 1) as Step) : current));
+    window.scrollTo(0, 0);
+  };
+
   const handleSubmit = async () => {
-    const form = formRef.current;
+    const trimmedOwnerName = ownerName.trim();
+    const trimmedPhone = normalizeIndianPhone(phone.trim());
 
-    const domService =
-      (
-        form?.elements.namedItem("service") as HTMLSelectElement | null
-      )?.value?.trim() || "";
-    const domCheckIn =
-      (
-        form?.elements.namedItem("check_in") as HTMLInputElement | null
-      )?.value?.trim() || "";
-    const domCheckOut =
-      (
-        form?.elements.namedItem("check_out") as HTMLInputElement | null
-      )?.value?.trim() || "";
-    const domPetsCount =
-      (form?.elements.namedItem("pets_count") as HTMLInputElement | null)
-        ?.value || "1";
-    const domOwnerName =
-      (
-        form?.elements.namedItem("owner_name") as HTMLInputElement | null
-      )?.value?.trim() || "";
-    const domPhone =
-      (
-        form?.elements.namedItem("phone") as HTMLInputElement | null
-      )?.value?.trim() || "";
-    const domInstructions =
-      (
-        form?.elements.namedItem("instructions") as HTMLTextAreaElement | null
-      )?.value?.trim() || "";
-
-    const trimmedClubId = clubId;
-    const trimmedService = domService || service.trim();
-    const trimmedCheckIn = domCheckIn;
-    const trimmedCheckOut = domCheckOut;
-    const trimmedOwnerName = domOwnerName || ownerName.trim();
-    const trimmedPhone = normalizeIndianPhone(domPhone || phone.trim());
-    const finalPetsCount = Math.max(1, Number(domPetsCount) || petsCount || 1);
-
-    const finalPets = pets.slice(0, finalPetsCount).map((pet) => ({
+    const finalPets = pets.slice(0, petsCount).map((pet) => ({
       name: pet.name.trim(),
       breed: pet.breed.trim(),
       size: pet.size || "small",
     }));
 
-    if (!trimmedClubId) {
+    if (!clubId) {
       alert(
         "Club ID missing. Please open booking from club details page again."
       );
-      return;
-    }
-
-    if (!trimmedService) {
-      alert("Please select service");
-      return;
-    }
-
-    if (!trimmedCheckIn) {
-      alert("Please select check-in date");
-      return;
-    }
-
-    if (!isValidDateString(trimmedCheckIn)) {
-      alert("Invalid check-in date");
-      return;
-    }
-
-    if (!hideCheckout && !trimmedCheckOut) {
-      alert("Please select check-out date");
-      return;
-    }
-
-    if (!hideCheckout && !isValidDateString(trimmedCheckOut)) {
-      alert("Invalid check-out date");
-      return;
-    }
-
-    const firstMissingPetIndex = finalPets.findIndex((pet) => !pet.name);
-    if (firstMissingPetIndex !== -1) {
-      alert(`Please enter pet name for pet ${firstMissingPetIndex + 1}`);
       return;
     }
 
@@ -336,20 +333,20 @@ export default function BookingPageClient({
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          club_id: trimmedClubId,
+          club_id: clubId,
           club_name: clubName,
-          service: trimmedService,
+          service: service.trim(),
           service_type: serviceType,
-          check_in: trimmedCheckIn,
-          check_out: hideCheckout ? null : trimmedCheckOut,
-          pets_count: finalPetsCount,
+          check_in: checkInValue,
+          check_out: hideCheckout ? null : checkOutValue,
+          pets_count: petsCount,
           pets: finalPets,
           pet_name: finalPets[0]?.name || "",
           pet_breed: finalPets[0]?.breed || "",
           pet_size: finalPets[0]?.size || "small",
           owner_name: trimmedOwnerName,
           phone: trimmedPhone,
-          instructions: domInstructions || instructions.trim() || "",
+          instructions: instructions.trim() || "",
         }),
       });
 
@@ -378,14 +375,7 @@ export default function BookingPageClient({
 
   return (
     <main className="min-h-screen bg-[#FAF8F5] px-4 py-6">
-      <form
-        ref={formRef}
-        className="mx-auto max-w-3xl space-y-4"
-        onSubmit={(e) => {
-          e.preventDefault();
-          handleSubmit();
-        }}
-      >
+      <div className="mx-auto max-w-3xl space-y-4">
         <div>
           <h1 className="text-2xl font-bold text-[#16386F]">Book Now</h1>
         </div>
@@ -404,77 +394,106 @@ export default function BookingPageClient({
           selectedService={service}
         />
 
-        <BookingForm
-          services={services.length ? services : ["boarding"]}
-          service={service}
-          setService={setService}
-          petsCount={petsCount}
-          setPetsCount={setPetsCount}
-          pets={pets}
-          updatePet={updatePet}
-          ownerName={ownerName}
-          setOwnerName={setOwnerName}
-          phone={phone}
-          setPhone={setPhone}
-          instructions={instructions}
-          setInstructions={setInstructions}
-          serviceType={serviceType}
-        />
-
-        <PriceSummary
-          selectedService={service}
-          pricePerUnit={pricePerUnit}
-          numberOfUnits={numberOfUnits}
-          petsCount={petsCount}
-          subtotal={subtotal}
-          total={total}
-          bookingUnitLabel={bookingUnitLabel}
-        />
-
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full rounded-2xl bg-[#CF8750] px-4 py-4 text-base font-semibold text-white shadow-[0_12px_30px_rgba(207,135,80,0.28)] transition-all duration-150 active:scale-[0.98] hover:-translate-y-[1px] hover:shadow-[0_16px_34px_rgba(207,135,80,0.34)] disabled:opacity-60 disabled:active:scale-100"
-        >
-          {loading ? "Submitting..." : "Confirm Booking"}
-        </button>
-        <div className="flex items-center justify-between gap-3 rounded-2xl border border-[#EDE4D8] bg-white px-4 py-4">
-          <p className="text-sm font-medium text-neutral-800">
-            Need help before booking?
-          </p>
-            
-          <a
-            href={whatsappSupportUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{
-              background: "#25D366",
-              color: "#ffffff",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = "#1ebe5d";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = "#25D366";
-            }}
-            className="inline-flex shrink-0 items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold whitespace-nowrap shadow-md transition"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 32 32"
-              className="h-4 w-4"
-              aria-hidden="true"
-            >
-              <path
-                fill="currentColor"
-                d="M16 .4C7.4.4.4 7.4.4 16c0 2.8.7 5.5 2.1 7.9L.3 31.7l8-2.1c2.3 1.3 4.9 2 7.7 2 8.6 0 15.6-7 15.6-15.6S24.6.4 16 .4zm0 28.5c-2.4 0-4.7-.6-6.7-1.8l-.5-.3-4.7 1.2 1.3-4.6-.3-.5c-1.3-2.1-2-4.5-2-6.9 0-7.3 5.9-13.2 13.2-13.2S29.2 8.7 29.2 16 23.3 28.9 16 28.9zm7.3-9.8c-.4-.2-2.2-1.1-2.5-1.2-.3-.1-.6-.2-.8.2s-.9 1.2-1.1 1.5c-.2.2-.4.3-.7.1-.4-.2-1.5-.6-2.8-1.9-1-1-1.7-2.2-1.9-2.6-.2-.4 0-.6.2-.8.2-.2.4-.5.6-.7.2-.2.3-.4.4-.6.1-.2.1-.5 0-.7s-.8-2-1.1-2.7c-.3-.7-.6-.6-.8-.6h-.7c-.2 0-.7.1-1 .5s-1.3 1.2-1.3 2.9 1.3 3.4 1.5 3.6c.2.2 2.6 4 6.3 5.6.9.4 1.6.6 2.1.8.9.3 1.7.2 2.3.1.7-.1 2.2-.9 2.5-1.7.3-.8.3-1.5.2-1.7-.1-.2-.3-.3-.7-.5z"
-              />
-            </svg>
-
-            <span>Chat</span>
-          </a>
+        <div className="rounded-[26px] border border-[#EDE4D8] bg-white px-5 py-4 shadow-[0_12px_28px_rgba(17,24,39,0.05)]">
+          <StepIndicator currentStep={step} />
         </div>
-      </form>
+
+        {step === 1 && (
+          <>
+            <BookingDetailsStep
+              services={services.length ? services : ["boarding"]}
+              service={service}
+              setService={setService}
+              checkInValue={checkInValue}
+              setCheckInValue={setCheckInValue}
+              checkOutValue={checkOutValue}
+              setCheckOutValue={setCheckOutValue}
+              hideCheckout={hideCheckout}
+            />
+
+            <button
+              type="button"
+              onClick={goToStep2}
+              className="w-full rounded-2xl bg-[#CF8750] px-4 py-4 text-base font-semibold text-white shadow-[0_12px_30px_rgba(207,135,80,0.28)] transition-all duration-150 active:scale-[0.98] hover:-translate-y-[1px] hover:shadow-[0_16px_34px_rgba(207,135,80,0.34)]"
+            >
+              Next: Pet Details
+            </button>
+
+            <ChatHelpBar whatsappSupportUrl={whatsappSupportUrl} />
+          </>
+        )}
+
+        {step === 2 && (
+          <>
+            <PetDetailsStep
+              petsCount={petsCount}
+              setPetsCount={handleSetPetsCount}
+              pets={pets}
+              updatePet={updatePet}
+            />
+
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={goBack}
+                className="w-1/3 rounded-2xl border border-[#E7DED1] bg-white px-4 py-4 text-base font-semibold text-[#16386F] transition-all duration-150 active:scale-[0.98]"
+              >
+                Back
+              </button>
+              <button
+                type="button"
+                onClick={goToStep3}
+                className="flex-1 rounded-2xl bg-[#CF8750] px-4 py-4 text-base font-semibold text-white shadow-[0_12px_30px_rgba(207,135,80,0.28)] transition-all duration-150 active:scale-[0.98] hover:-translate-y-[1px] hover:shadow-[0_16px_34px_rgba(207,135,80,0.34)]"
+              >
+                Next: Owner Details
+              </button>
+            </div>
+
+            <ChatHelpBar whatsappSupportUrl={whatsappSupportUrl} />
+          </>
+        )}
+
+        {step === 3 && (
+          <>
+            <OwnerDetailsStep
+              ownerName={ownerName}
+              setOwnerName={setOwnerName}
+              phone={phone}
+              setPhone={setPhone}
+              instructions={instructions}
+              setInstructions={setInstructions}
+              selectedService={service}
+              pricePerUnit={pricePerUnit}
+              numberOfUnits={numberOfUnits}
+              petsCount={petsCount}
+              subtotal={subtotal}
+              total={total}
+              bookingUnitLabel={bookingUnitLabel}
+            />
+
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={goBack}
+                disabled={loading}
+                className="w-1/3 rounded-2xl border border-[#E7DED1] bg-white px-4 py-4 text-base font-semibold text-[#16386F] transition-all duration-150 active:scale-[0.98] disabled:opacity-60"
+              >
+                Back
+              </button>
+              <button
+                type="button"
+                onClick={handleSubmit}
+                disabled={loading}
+                className="flex-1 rounded-2xl bg-[#CF8750] px-4 py-4 text-base font-semibold text-white shadow-[0_12px_30px_rgba(207,135,80,0.28)] transition-all duration-150 active:scale-[0.98] hover:-translate-y-[1px] hover:shadow-[0_16px_34px_rgba(207,135,80,0.34)] disabled:opacity-60 disabled:active:scale-100"
+              >
+                {loading ? "Submitting..." : "Confirm Booking"}
+              </button>
+            </div>
+
+            <ChatHelpBar whatsappSupportUrl={whatsappSupportUrl} />
+          </>
+        )}
+      </div>
     </main>
   );
 }

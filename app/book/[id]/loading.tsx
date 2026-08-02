@@ -95,23 +95,22 @@ export default function BookPageLoading() {
           </div>
         )}
 
+        <div className="animate-pulse rounded-[26px] border border-[#EDE4D8] bg-white px-5 py-4 shadow-[0_12px_28px_rgba(17,24,39,0.05)]">
+          <div className="flex items-center gap-2">
+            <div className="h-8 w-8 rounded-full bg-neutral-200" />
+            <div className="h-[2px] flex-1 rounded-full bg-neutral-200" />
+            <div className="h-8 w-8 rounded-full bg-neutral-200" />
+            <div className="h-[2px] flex-1 rounded-full bg-neutral-200" />
+            <div className="h-8 w-8 rounded-full bg-neutral-200" />
+          </div>
+        </div>
+
         <div className="animate-pulse rounded-[26px] border border-[#EDE4D8] bg-white p-4 shadow-[0_12px_28px_rgba(17,24,39,0.05)] sm:p-5">
           <div className="h-5 w-32 rounded-full bg-neutral-200" />
           <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="h-11 rounded-2xl bg-neutral-200 sm:col-span-2" />
             <div className="h-11 rounded-2xl bg-neutral-200" />
             <div className="h-11 rounded-2xl bg-neutral-200" />
-          </div>
-          <div className="mt-6 h-24 rounded-2xl bg-neutral-200" />
-          <div className="mt-4 h-24 rounded-2xl bg-neutral-200" />
-        </div>
-
-        <div className="animate-pulse rounded-[26px] border border-[#EDE4D8] bg-white p-4 shadow-[0_12px_28px_rgba(17,24,39,0.05)] sm:p-5">
-          <div className="h-5 w-32 rounded-full bg-neutral-200" />
-          <div className="mt-4 space-y-3">
-            <div className="h-4 w-full rounded-full bg-neutral-200" />
-            <div className="h-4 w-full rounded-full bg-neutral-200" />
-            <div className="h-4 w-2/3 rounded-full bg-neutral-200" />
           </div>
         </div>
 
