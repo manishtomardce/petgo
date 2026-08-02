@@ -383,7 +383,8 @@ export default function BookingPageClient({
 
       // keep the button in its loading state through the navigation itself,
       // so it doesn't flash back to normal right before the page swaps
-      router.push(`/booking-confirmation/${result.bookingId}`);
+      const whatsappParam = result.whatsappSent ? "?whatsapp=1" : "";
+      router.push(`/booking-confirmation/${result.bookingId}${whatsappParam}`);
     } catch (error) {
       console.error(error);
       alert("Something went wrong while submitting booking");

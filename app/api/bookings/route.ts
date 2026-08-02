@@ -119,29 +119,26 @@ export async function POST(req: NextRequest) {
       const accountSid = process.env.TWILIO_ACCOUNT_SID;
       const authToken = process.env.TWILIO_AUTH_TOKEN;
       const twilioWhatsappNumber = process.env.TWILIO_WHATSAPP_NUMBER;
+      const templateSid = process.env.TWILIO_WHATSAPP_TEMPLATE_SID;
 
-      if (!accountSid || !authToken || !twilioWhatsappNumber) {
+      if (!accountSid || !authToken || !twilioWhatsappNumber || !templateSid) {
         console.warn("Twilio env vars missing. Skipping WhatsApp notification.");
       } else {
         const client = Twilio(accountSid, authToken);
 
-        const messageBody = `PetGo booking confirmed 🐾
-
-Hi ${owner_name},
-
-Your booking has been received successfully.
-
-Club: ${club_name}
-Service: ${service_type}
-Check-in: ${check_in}${check_out ? `\nCheck-out / Time: ${check_out}` : ""}
-Pet: ${pet_name || petDetails[0]?.name || "Your pet"}
-
-Booking ID: ${data.id}
-
-We will contact you shortly.`;
-
+        // Business-initiated WhatsApp messages must use a Meta-approved
+        // template - freeform text only works within 24h of the customer
+        // messaging first, which never applies to a first-time booking.
         const twilioMessage = await client.messages.create({
-          body: messageBody,
+          contentSid: templateSid,
+          contentVariables: JSON.stringify({
+            "1": owner_name,
+            "2": club_name,
+            "3": service_type,
+            "4": check_in,
+            "5": pet_name || petDetails[0]?.name || "Your pet",
+            "6": data.id,
+          }),
           from: twilioWhatsappNumber,
           to: `whatsapp:${normalizedPhone}`,
         });
