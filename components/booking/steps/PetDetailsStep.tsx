@@ -34,18 +34,31 @@ export default function PetDetailsStep({
         <label className="mb-1.5 block text-sm font-medium text-neutral-700">
           Number of pets
         </label>
-        <select
-          value={petsCount}
-          onChange={(e) => setPetsCount(Math.max(1, Number(e.target.value) || 1))}
-          className="w-full rounded-2xl border border-[#E7DED1] bg-white px-4 py-3 text-[16px] outline-none focus:border-[#CF8750]"
-          required
-        >
-          {[1, 2, 3, 4, 5].map((count) => (
-            <option key={count} value={count}>
-              {count} {count === 1 ? "pet" : "pets"}
-            </option>
-          ))}
-        </select>
+        <div className="flex items-center justify-between rounded-2xl border border-[#E7DED1] bg-white px-4 py-2">
+          <button
+            type="button"
+            onClick={() => setPetsCount(Math.max(1, petsCount - 1))}
+            disabled={petsCount <= 1}
+            aria-label="Decrease number of pets"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#E7DED1] text-xl font-semibold text-[#16386F] transition-all duration-150 active:scale-90 disabled:opacity-30"
+          >
+            −
+          </button>
+
+          <span className="text-[16px] font-semibold text-[#16386F]">
+            {petsCount} {petsCount === 1 ? "pet" : "pets"}
+          </span>
+
+          <button
+            type="button"
+            onClick={() => setPetsCount(Math.min(5, petsCount + 1))}
+            disabled={petsCount >= 5}
+            aria-label="Increase number of pets"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#E7DED1] text-xl font-semibold text-[#16386F] transition-all duration-150 active:scale-90 disabled:opacity-30"
+          >
+            +
+          </button>
+        </div>
       </div>
 
       <div className="mt-4 space-y-4">
