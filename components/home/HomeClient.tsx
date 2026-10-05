@@ -188,6 +188,30 @@ export default function HomeClient({ initialClubs }: { initialClubs: Club[] | nu
   const [locationBlocked, setLocationBlocked] = useState(false);
   // Set once they tap "Use my location" and the browser still refuses: show how to unblock.
   const [showLocationHelp, setShowLocationHelp] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
+
+  // Experiences row: where the visible window sits, for the scroll bar and edge fades.
+  const experienceRowRef = useRef<HTMLDivElement>(null);
+  const [rowScroll, setRowScroll] = useState({ overflow: false, start: 0, size: 1 });
+
+  function measureExperienceRow() {
+    const el = experienceRowRef.current;
+    if (!el) return;
+    setRowScroll({
+      overflow: el.scrollWidth > el.clientWidth + 1,
+      start: el.scrollLeft / el.scrollWidth,
+      size: el.clientWidth / el.scrollWidth,
+    });
+  }
+
+  useEffect(() => {
+    const el = experienceRowRef.current;
+    if (!el) return;
+    measureExperienceRow();
+    const observer = new ResizeObserver(measureExperienceRow);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   const hasAutoCheckedLocation = useRef(false);
   const locationMessageTimers = useRef<number[]>([]);
@@ -474,6 +498,8 @@ export default function HomeClient({ initialClubs }: { initialClubs: Club[] | nu
     steps: string[];
     /** One-tap escape from an in-app browser into the real one, where location works. */
     openOutside?: { label: string; href: string };
+    /** Inside an app's browser, leaving is the fix — retrying never helps. */
+    inApp?: boolean;
   } {
     const ua = navigator.userAgent;
     const ios = /iPhone|iPad|iPod/.test(ua);
@@ -492,12 +518,14 @@ export default function HomeClient({ initialClubs }: { initialClubs: Club[] | nu
         reason: `${app}'s built-in browser doesn't share location. Open PetGo in ${ios ? "Safari" : "Chrome"} to see the clubs nearest you.`,
         steps: [
           "Tap ••• at the top-right of the screen.",
-          "Choose “Open in external browser”.",
+          `Choose “Open in external browser”${ios ? " (or copy the link and paste it into Safari)" : ""}.`,
         ],
-        // iOS 17+ honours x-safari-https from in-app browsers; Android hands an
-        // intent to Chrome, falling back to the same page if Chrome is missing.
+        inApp: true,
+        // Android hands an intent to Chrome, falling back to the same page if
+        // Chrome is missing. iOS in-app browsers block every route out to
+        // Safari (x-safari-https included), so there it's the menu or a copied link.
         openOutside: ios
-          ? { label: "Open in Safari", href: here.replace(/^https:/, "x-safari-https:") }
+          ? undefined
           : {
               label: "Open in Chrome",
               href: `intent://${here.replace(/^https?:\/\//, "")}#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=${encodeURIComponent(here)};end`,
@@ -533,6 +561,22 @@ export default function HomeClient({ initialClubs }: { initialClubs: Club[] | nu
   }
 
   const help = locationBlocked ? locationHelp() : null;
+
+  async function copyLink() {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+    } catch {
+      // Older in-app browsers: fall back to a hidden field + execCommand.
+      const field = document.createElement("textarea");
+      field.value = window.location.href;
+      document.body.appendChild(field);
+      field.select();
+      document.execCommand("copy");
+      field.remove();
+    }
+    setLinkCopied(true);
+    window.setTimeout(() => setLinkCopied(false), 2500);
+  }
 
   const sortLabel = sortMode === "distance" ? "Nearest" : "Top rated";
 
@@ -572,7 +616,12 @@ export default function HomeClient({ initialClubs }: { initialClubs: Club[] | nu
 
             <section>
               {/* One row of experiences: centred when it fits, scrolls when it does not. The -5px offsets the tile inset so tile edges line up with the column. */}
-              <div className="no-scrollbar -mx-[5px] flex gap-1 overflow-x-auto py-1">
+              <div className="relative">
+              <div
+                ref={experienceRowRef}
+                onScroll={measureExperienceRow}
+                className="no-scrollbar -mx-[5px] flex gap-1 overflow-x-auto py-1"
+              >
                 {EXPERIENCES.map((label) => {
                   const active = selectedServices.includes(label);
                   return (
@@ -605,13 +654,32 @@ export default function HomeClient({ initialClubs }: { initialClubs: Club[] | nu
                 })}
               </div>
 
+                {/* Edge fades say "there's more this way". */}
+                {rowScroll.overflow && rowScroll.start > 0.01 && (
+                  <div className="pointer-events-none absolute inset-y-0 -left-[5px] w-8 bg-gradient-to-r from-white to-transparent" />
+                )}
+                {rowScroll.overflow && rowScroll.start + rowScroll.size < 0.99 && (
+                  <div className="pointer-events-none absolute inset-y-0 -right-[5px] w-10 bg-gradient-to-l from-white to-transparent" />
+                )}
+              </div>
+
+              {/* Scroll bar for the row — only when it doesn't all fit. */}
+              {rowScroll.overflow && (
+                <div className="relative mx-auto mt-2.5 h-1 w-20 overflow-hidden rounded-full bg-[#EEE7DC]" aria-hidden="true">
+                  <div
+                    className="absolute inset-y-0 rounded-full bg-[#16386F]"
+                    style={{ left: `${rowScroll.start * 100}%`, width: `${rowScroll.size * 100}%` }}
+                  />
+                </div>
+              )}
+
               {help && (
                 <div className="mx-auto mt-3 max-w-md rounded-2xl bg-[#FAF8F5] px-4 py-3 text-[12.5px] leading-5 text-[#4A433D]">
                   <p>
                     <span className="font-semibold text-[#16386F]">Showing top rated clubs.</span>{" "}
                     {help.reason}
                   </p>
-                  {showLocationHelp ? (
+                  {showLocationHelp || help.inApp ? (
                     <ol className="mt-2 list-decimal space-y-0.5 pl-4 text-[#7A746C]">
                       {help.steps.map((step) => (
                         <li key={step}>{step}</li>
@@ -621,13 +689,22 @@ export default function HomeClient({ initialClubs }: { initialClubs: Club[] | nu
                   <div className="mt-2 flex flex-wrap items-center gap-4">
                     {help.openOutside && (
                       <a
-                        href={help.openOutside!.href}
+                        href={help.openOutside.href}
                         className="rounded-full bg-[#16386F] px-4 py-2 font-semibold text-white active:opacity-80"
                       >
-                        {help.openOutside!.label}
+                        {help.openOutside.label}
                       </a>
                     )}
-                    {!showLocationHelp && (
+                    {help.inApp && !help.openOutside && (
+                      <button
+                        type="button"
+                        onClick={copyLink}
+                        className="rounded-full bg-[#16386F] px-4 py-2 font-semibold text-white active:opacity-80"
+                      >
+                        {linkCopied ? "Link copied ✓" : "Copy link"}
+                      </button>
+                    )}
+                    {!showLocationHelp && !help.inApp && (
                       <button
                         type="button"
                         onClick={() => setShowLocationHelp(true)}
@@ -637,7 +714,7 @@ export default function HomeClient({ initialClubs }: { initialClubs: Club[] | nu
                       </button>
                     )}
                     {/* Retrying can't help inside an in-app browser; leaving it can. */}
-                    {!help.openOutside && (
+                    {!help.inApp && (
                       <button
                         type="button"
                         onClick={() => requestLocationAndSort({ silent: false, autoApplyDistance: true })}
