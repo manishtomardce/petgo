@@ -469,7 +469,12 @@ export default function HomeClient({ initialClubs }: { initialClubs: Club[] | nu
    * re-open the permission prompt once it has been refused, so the visitor has
    * to change it themselves.
    */
-  function locationHelp(): { reason: string; steps: string[] } {
+  function locationHelp(): {
+    reason: string;
+    steps: string[];
+    /** One-tap escape from an in-app browser into the real one, where location works. */
+    openOutside?: { label: string; href: string };
+  } {
     const ua = navigator.userAgent;
     const ios = /iPhone|iPad|iPod/.test(ua);
     const inApp = /Instagram|FBAN|FBAV|FB_IAB|Line\/|Snapchat|LinkedInApp|Twitter|; wv\)/.test(ua);
@@ -481,12 +486,22 @@ export default function HomeClient({ initialClubs }: { initialClubs: Club[] | nu
       };
     }
     if (inApp) {
+      const app = /Instagram/.test(ua) ? "Instagram" : /FBAN|FBAV|FB_IAB/.test(ua) ? "Facebook" : "This app";
+      const here = window.location.href;
       return {
-        reason: "This app's built-in browser doesn't share location.",
+        reason: `${app}'s built-in browser doesn't share location. Open PetGo in ${ios ? "Safari" : "Chrome"} to see the clubs nearest you.`,
         steps: [
-          "Tap the ••• or share menu at the top of the screen.",
-          ios ? "Choose “Open in Safari”." : "Choose “Open in Chrome” (or your browser).",
+          "Tap ••• at the top-right of the screen.",
+          "Choose “Open in external browser”.",
         ],
+        // iOS 17+ honours x-safari-https from in-app browsers; Android hands an
+        // intent to Chrome, falling back to the same page if Chrome is missing.
+        openOutside: ios
+          ? { label: "Open in Safari", href: here.replace(/^https:/, "x-safari-https:") }
+          : {
+              label: "Open in Chrome",
+              href: `intent://${here.replace(/^https?:\/\//, "")}#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=${encodeURIComponent(here)};end`,
+            },
       };
     }
     if (ios) {
@@ -517,6 +532,8 @@ export default function HomeClient({ initialClubs }: { initialClubs: Club[] | nu
     };
   }
 
+  const help = locationBlocked ? locationHelp() : null;
+
   const sortLabel = sortMode === "distance" ? "Nearest" : "Top rated";
 
   const sectionTitle =
@@ -533,17 +550,17 @@ export default function HomeClient({ initialClubs }: { initialClubs: Club[] | nu
       {showSplash ? <SplashScreen /> : null}
 
       <main className="min-h-screen bg-white">
-        <div className="mx-auto max-w-6xl px-4 pb-8 pt-3">
+        <div className="mx-auto max-w-6xl px-4 pb-10 pt-5 sm:px-6 sm:pt-10">
           <div className="mx-auto max-w-md lg:max-w-2xl">
-            <section className="mb-5">
-              <div className="mb-3">
+            <section className="mb-5 sm:mb-7">
+              <div>
                 <div className="flex flex-col items-center">
                   <h1 className="leading-none text-[42px] font-extrabold tracking-[-0.03em]">
                     <span className="text-[#F4A623]">Pet</span>
                     <span className="text-[#16386F]">Go</span>
                   </h1>
 
-                  <div className="mt-3 text-center">
+                  <div className="mt-2 text-center">
                     <p className="text-[14px]  text-[#2d2b28]">
                       Discover & Book the perfect club for your dog
                     </p>
@@ -553,9 +570,9 @@ export default function HomeClient({ initialClubs }: { initialClubs: Club[] | nu
               </div>
             </section>
 
-            <section className="mb-4">
+            <section>
               {/* One row of experiences: centred when it fits, scrolls when it does not. The -5px offsets the tile inset so tile edges line up with the column. */}
-              <div className="no-scrollbar -mx-[5px] flex gap-1 overflow-x-auto pb-1.5 pt-3">
+              <div className="no-scrollbar -mx-[5px] flex gap-1 overflow-x-auto py-1">
                 {EXPERIENCES.map((label) => {
                   const active = selectedServices.includes(label);
                   return (
@@ -588,20 +605,28 @@ export default function HomeClient({ initialClubs }: { initialClubs: Club[] | nu
                 })}
               </div>
 
-              {locationBlocked && (
-                <div className="mx-auto mt-2 max-w-md rounded-2xl bg-[#FAF8F5] px-4 py-3 text-[12.5px] leading-5 text-[#4A433D]">
+              {help && (
+                <div className="mx-auto mt-3 max-w-md rounded-2xl bg-[#FAF8F5] px-4 py-3 text-[12.5px] leading-5 text-[#4A433D]">
                   <p>
                     <span className="font-semibold text-[#16386F]">Showing top rated clubs.</span>{" "}
-                    {locationHelp().reason}
+                    {help.reason}
                   </p>
                   {showLocationHelp ? (
                     <ol className="mt-2 list-decimal space-y-0.5 pl-4 text-[#7A746C]">
-                      {locationHelp().steps.map((step) => (
+                      {help.steps.map((step) => (
                         <li key={step}>{step}</li>
                       ))}
                     </ol>
                   ) : null}
-                  <div className="mt-2 flex gap-4">
+                  <div className="mt-2 flex flex-wrap items-center gap-4">
+                    {help.openOutside && (
+                      <a
+                        href={help.openOutside!.href}
+                        className="rounded-full bg-[#16386F] px-4 py-2 font-semibold text-white active:opacity-80"
+                      >
+                        {help.openOutside!.label}
+                      </a>
+                    )}
                     {!showLocationHelp && (
                       <button
                         type="button"
@@ -611,13 +636,16 @@ export default function HomeClient({ initialClubs }: { initialClubs: Club[] | nu
                         How to turn it on
                       </button>
                     )}
-                    <button
-                      type="button"
-                      onClick={() => requestLocationAndSort({ silent: false, autoApplyDistance: true })}
-                      className="font-semibold text-[#16386F] active:opacity-60"
-                    >
-                      Try again
-                    </button>
+                    {/* Retrying can't help inside an in-app browser; leaving it can. */}
+                    {!help.openOutside && (
+                      <button
+                        type="button"
+                        onClick={() => requestLocationAndSort({ silent: false, autoApplyDistance: true })}
+                        className="font-semibold text-[#16386F] active:opacity-60"
+                      >
+                        Try again
+                      </button>
+                    )}
                   </div>
                 </div>
               )}
@@ -636,7 +664,7 @@ export default function HomeClient({ initialClubs }: { initialClubs: Club[] | nu
 
           {/* Spans the same width as the grid so the title and sort line up with the cards. */}
           {!loading && (
-            <div className="mb-4 mt-2 flex items-center justify-between gap-3">
+            <div className="mb-3 mt-5 flex items-center justify-between gap-3 sm:mb-4 sm:mt-7">
               <span className="flex-1 text-[13px] font-semibold uppercase tracking-[0.5px] text-[#7A746C]">
                 {sectionTitle}
               </span>
@@ -654,7 +682,7 @@ export default function HomeClient({ initialClubs }: { initialClubs: Club[] | nu
             </div>
           )}
 
-          <section className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3 lg:gap-6">
             {loading ? (
               <>
                 {[1, 2, 3].map((i) => (

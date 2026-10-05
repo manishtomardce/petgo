@@ -256,11 +256,12 @@ export default function ClubCard({ club }: { club: Club }) {
         </div>
       </div>
 
-      {/* SERVICES + PRICE */}
-      <div className="relative flex-1 px-5 pb-5 pt-4">
+      {/* SERVICES + PRICE — side by side, price centred against the chips so it
+          lines up whether they take one row or two. */}
+      <div className="flex flex-1 items-center gap-3 px-5 py-4">
         {/* Chips size to their full label and wrap. Fixed thirds (as in the app)
             truncate names like "Grooming" in the narrower desktop grid columns. */}
-        <div className="flex flex-wrap gap-2 pr-[92px]">
+        <div className="flex min-w-0 flex-1 flex-wrap gap-2">
           {shownServices.map((service) => (
             <span
               key={service}
@@ -276,11 +277,11 @@ export default function ClubCard({ club }: { club: Club }) {
           )}
         </div>
 
-        <div className="absolute bottom-5 right-5 text-right">
+        <div className="shrink-0 text-right">
           <p className="text-[19px] font-bold leading-6 text-[#16386F]">
             {price != null ? `₹${price}` : "On request"}
           </p>
-          {price != null && <p className="text-[11px] text-[#7A746C]">onwards</p>}
+          {price != null && <p className="text-[11px] leading-4 text-[#7A746C]">onwards</p>}
         </div>
       </div>
     </article>
