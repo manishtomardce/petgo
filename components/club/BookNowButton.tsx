@@ -12,7 +12,11 @@ type BookNowButtonProps = {
   rating?: number | null;
   reviewCount?: number | null;
   services?: string[];
+  className?: string;
 };
+
+const DEFAULT_CLASS =
+  "inline-flex w-full items-center justify-center rounded-xl bg-[#CF8750] px-5 py-3.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(207,135,80,0.32)] transition-all duration-150 active:scale-[0.97] hover:opacity-95";
 
 export default function BookNowButton({
   clubId,
@@ -24,6 +28,7 @@ export default function BookNowButton({
   rating,
   reviewCount,
   services,
+  className = DEFAULT_CLASS,
 }: BookNowButtonProps) {
   const href = service
     ? `/book/${clubId}?service=${encodeURIComponent(service)}`
@@ -47,9 +52,9 @@ export default function BookNowButton({
           })
         );
       }}
-      className="inline-flex w-full items-center justify-center rounded-xl bg-[#CF8750] px-5 py-3.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(207,135,80,0.32)] transition-all duration-150 active:scale-[0.97] hover:opacity-95"
+      className={className}
     >
-      Book Now
+      Book now
     </Link>
   );
 }

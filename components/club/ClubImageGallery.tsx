@@ -1,161 +1,190 @@
 "use client";
-import { useLayoutEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft } from "lucide-react";
+
+import { ChevronLeft, ChevronRight, Images, Share2 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useLayoutEffect, useMemo, useRef, useState } from "react";
+
+/**
+ * Swipeable hero plus a thumbnail rail — ported from the app
+ * (petgo-app/src/features/clubs/ClubGallery.tsx).
+ *
+ * The hero keeps a photo-friendly shape at every width: 320px tall on phones
+ * (as in the app), a 3:2 frame on wider screens. Stretching it across a laptop
+ * window at half the viewport height cropped most of each photo away.
+ */
 
 type ClubImageGalleryProps = {
   images: string[];
   clubName: string;
+  shareText: string;
 };
 
-const SWIPE_THRESHOLD = 50;
-const EDGE_RESISTANCE = 0.35;
-
-export default function ClubImageGallery({
-  images,
-  clubName,
-}: ClubImageGalleryProps) {
+export default function ClubImageGallery({ images, clubName, shareText }: ClubImageGalleryProps) {
   const router = useRouter();
-  const touchStartX = useRef<number | null>(null);
-  const [activeIndex, setActiveIndex] = useState(0);
-  const [dragOffset, setDragOffset] = useState(0);
-  const [isDragging, setIsDragging] = useState(false);
+  const trackRef = useRef<HTMLDivElement>(null);
+  const [index, setIndex] = useState(0);
+  const [copied, setCopied] = useState(false);
 
   useLayoutEffect(() => {
     window.scrollTo(0, 0);
   }, []);
 
-  const safeImages = useMemo(() => {
-    const cleaned = images
-      .map((img) => (typeof img === "string" ? img.trim() : ""))
-      .filter(Boolean);
+  const photos = useMemo(() => {
+    const cleaned = images.map((img) => img?.trim()).filter(Boolean);
     return cleaned.length > 0 ? cleaned : ["/placeholder-club.jpg"];
   }, [images]);
 
-  const hasMultipleImages = safeImages.length > 1;
+  const total = photos.length;
 
-  const goPrev = () => {
-    setActiveIndex((prev) => (prev > 0 ? prev - 1 : prev));
-  };
+  function goTo(next: number) {
+    const track = trackRef.current;
+    if (!track) return;
+    const target = Math.max(0, Math.min(total - 1, next));
+    track.scrollTo({ left: target * track.clientWidth, behavior: "smooth" });
+  }
 
-  const goNext = () => {
-    setActiveIndex((prev) =>
-      prev < safeImages.length - 1 ? prev + 1 : prev
-    );
-  };
+  function goBack() {
+    if (window.history.length > 1) router.back();
+    else router.push("/");
+  }
 
-  const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
-    if (!hasMultipleImages) return;
-    touchStartX.current = e.touches[0].clientX;
-    setIsDragging(true);
-  };
-
-  const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
-    if (!hasMultipleImages || touchStartX.current === null) return;
-
-    let delta = e.touches[0].clientX - touchStartX.current;
-    const atFirstImage = activeIndex === 0;
-    const atLastImage = activeIndex === safeImages.length - 1;
-
-    if ((atFirstImage && delta > 0) || (atLastImage && delta < 0)) {
-      delta *= EDGE_RESISTANCE;
+  async function share() {
+    const url = window.location.href;
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: clubName, text: shareText, url });
+      } catch {
+        // dismissed
+      }
+      return;
     }
-
-    setDragOffset(delta);
-  };
-
-  const handleTouchEnd = () => {
-    if (!hasMultipleImages || touchStartX.current === null) return;
-
-    if (dragOffset < -SWIPE_THRESHOLD) goNext();
-    else if (dragOffset > SWIPE_THRESHOLD) goPrev();
-
-    setDragOffset(0);
-    setIsDragging(false);
-    touchStartX.current = null;
-  };
-
-  const handleImageTap = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!hasMultipleImages) return;
-    const rect = e.currentTarget.getBoundingClientRect();
-    const clickX = e.clientX - rect.left;
-    if (clickX < rect.width / 2) goPrev();
-    else goNext();
-  };
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    } catch {
+      // clipboard blocked; nothing useful to do
+    }
+  }
 
   return (
-    <div className="relative w-full bg-white">
-      <div
-        className="relative w-full overflow-hidden bg-neutral-100"
-        style={{
-          height: "calc(50vh + env(safe-area-inset-top))",
-          marginTop: "calc(-1 * env(safe-area-inset-top))",
-        }}
-      >
+    <div className="md:px-5 md:pt-5">
+      <div className="group relative h-80 w-full overflow-hidden bg-[#F4EFE6] md:h-auto md:aspect-3/2 md:rounded-[28px]">
         <div
-          className="flex h-full w-full"
-          style={{
-            transform: `translateX(calc(${-activeIndex * 100}% + ${dragOffset}px))`,
-            transition: isDragging
-              ? "none"
-              : "transform 400ms cubic-bezier(0.22, 1, 0.36, 1)",
+          ref={trackRef}
+          onScroll={(e) => {
+            const el = e.currentTarget;
+            setIndex(Math.round(el.scrollLeft / el.clientWidth));
           }}
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
-          onClick={handleImageTap}
+          className="no-scrollbar flex h-full w-full snap-x snap-mandatory overflow-x-auto"
         >
-          {safeImages.map((src, index) => (
+          {photos.map((src, i) => (
             <img
-              key={`${src}-${index}`}
+              key={`${src}-${i}`}
               src={src}
-              alt={`${clubName} image ${index + 1}`}
-              className="h-full w-full shrink-0 select-none object-cover object-center"
+              alt={`${clubName}, photo ${i + 1}`}
+              loading={i === 0 ? "eager" : "lazy"}
               draggable={false}
+              className="h-full w-full shrink-0 snap-center select-none object-cover"
             />
           ))}
         </div>
 
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/20 to-transparent" />
-
+        {/* Scrims so the controls, dots and counter stay legible over a bright photo. */}
         <div
-          className="absolute left-4 z-20"
-          style={{ top: "calc(env(safe-area-inset-top) + 16px)" }}
+          className="pointer-events-none absolute inset-x-0 top-0 h-28"
+          style={{ background: "linear-gradient(to bottom, rgba(8,20,40,0.35), transparent)" }}
+        />
+        <div
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-24"
+          style={{ background: "linear-gradient(to bottom, transparent, rgba(8,20,40,0.55))" }}
+        />
+
+        <button
+          type="button"
+          onClick={goBack}
+          aria-label="Go back"
+          className="absolute left-4 flex h-10 w-10 items-center justify-center rounded-full bg-white text-[#16386F] shadow-[0_6px_16px_rgba(17,24,39,0.13)] active:opacity-80"
+          style={{ top: "calc(env(safe-area-inset-top) + 8px)" }}
         >
-          <button
-            type="button"
-            onClick={() => router.back()}
-            className="flex h-11 w-11 items-center justify-center rounded-full bg-white/90 text-neutral-900 shadow-sm backdrop-blur"
-            aria-label="Go back"
-          >
-            <ArrowLeft size={18} />
-          </button>
-        </div>
+          <ChevronLeft size={24} />
+        </button>
 
-        {hasMultipleImages ? (
-          <div className="pointer-events-none absolute bottom-4 left-1/2 z-20 flex -translate-x-1/2 items-center gap-2 rounded-full bg-black/20 px-3 py-2 backdrop-blur-sm">
-            {safeImages.map((_, index) => (
-              <button
-                key={`dot-${index}`}
-                type="button"
-                onClick={() => setActiveIndex(index)}
-                className={`pointer-events-auto rounded-full transition-all ${
-                  activeIndex === index
-                    ? "h-2 w-5 bg-white"
-                    : "h-2 w-2 bg-white/70"
-                }`}
-                aria-label={`Go to image ${index + 1}`}
-              />
-            ))}
-          </div>
-        ) : null}
+        <button
+          type="button"
+          onClick={share}
+          aria-label={`Share ${clubName}`}
+          className="absolute right-4 flex h-10 w-10 items-center justify-center rounded-full bg-white text-[#16386F] shadow-[0_6px_16px_rgba(17,24,39,0.13)] active:opacity-80"
+          style={{ top: "calc(env(safe-area-inset-top) + 8px)" }}
+        >
+          <Share2 size={18} />
+        </button>
+        {copied && (
+          <span className="absolute right-4 top-16 rounded-full bg-black/70 px-3 py-1 text-[12px] font-semibold text-white">
+            Link copied
+          </span>
+        )}
 
-        {hasMultipleImages ? (
-          <div className="pointer-events-none absolute bottom-4 right-4 z-20 rounded-full bg-black/50 px-3 py-1 text-sm font-medium text-white">
-            {activeIndex + 1}/{safeImages.length}
-          </div>
-        ) : null}
+        {total > 1 && (
+          <>
+            {/* Desktop arrows — touch users swipe. */}
+            <button
+              type="button"
+              aria-label="Previous photo"
+              onClick={() => goTo(index - 1)}
+              disabled={index === 0}
+              className="absolute left-4 top-1/2 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-[#16386F] opacity-0 shadow transition group-hover:opacity-100 disabled:invisible md:flex"
+            >
+              <ChevronLeft size={22} />
+            </button>
+            <button
+              type="button"
+              aria-label="Next photo"
+              onClick={() => goTo(index + 1)}
+              disabled={index === total - 1}
+              className="absolute right-4 top-1/2 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-[#16386F] opacity-0 shadow transition group-hover:opacity-100 disabled:invisible md:flex"
+            >
+              <ChevronRight size={22} />
+            </button>
+
+            <div className="pointer-events-none absolute bottom-4 right-4 flex items-center gap-1 rounded-full bg-black/45 px-3 py-1.5">
+              <Images size={12} className="text-white" />
+              <span className="text-[12px] font-semibold text-white">
+                {index + 1} / {total}
+              </span>
+            </div>
+
+            <div className="pointer-events-none absolute inset-x-0 bottom-5 flex items-center justify-center gap-1.5">
+              {photos.map((_, i) => (
+                <span
+                  key={i}
+                  className={`h-1.5 rounded-full transition-all ${
+                    i === index ? "w-5 bg-white" : "w-1.5 bg-white/50"
+                  }`}
+                />
+              ))}
+            </div>
+          </>
+        )}
       </div>
+
+      {total > 1 && (
+        <div className="no-scrollbar flex gap-2 overflow-x-auto px-5 py-3 md:px-0">
+          {photos.map((src, i) => (
+            <button
+              key={`thumb-${src}-${i}`}
+              type="button"
+              onClick={() => goTo(i)}
+              aria-label={`Photo ${i + 1} of ${total}`}
+              className={`h-14 w-14 shrink-0 overflow-hidden rounded-xl border-2 transition ${
+                i === index ? "border-[#16386F]" : "border-transparent opacity-60 hover:opacity-90"
+              }`}
+            >
+              <img src={src} alt="" loading="lazy" draggable={false} className="h-full w-full object-cover" />
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

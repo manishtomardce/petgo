@@ -3,6 +3,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createClient } from "../lib/supabase";
 import ClubCard from "@/components/club/ClubCard";
+import ExperienceIcon from "@/components/club/ExperienceIcon";
 
 type Club = {
   id: string;
@@ -16,6 +17,11 @@ type Club = {
   review_count: number | null;
   latitude: number | null;
   longitude: number | null;
+  boarding_price: number | null;
+  daycare_price: number | null;
+  pool_price: number | null;
+  grooming_price: number | null;
+  cafe_price: number | null;
 };
 
 type UserLocation = {
@@ -27,33 +33,32 @@ type ClubWithDistance = Club & {
   distanceKm: number | null;
 };
 
-type SortMode = "none" | "distance" | "rating";
+// Two modes, and the control flips between them — same as the app.
+type SortMode = "distance" | "rating";
 
 const supabase = createClient();
 
 let cachedClubs: Club[] | null = null;
 let cachedUserLocation: UserLocation | null = null;
 
-const cityOptions = ["All", "Gurgaon", "Bangalore", "Noida" , "Delhi"];
-const serviceOptions = [
-  "All Services",
+// Same experiences, in the same order, as the app's Discover screen.
+const EXPERIENCES = [
   "Daycare",
   "Boarding",
   "Pool",
   "Park",
   "Cafe",
   "Grooming",
+  "Play School",
+  "Events",
 ];
 
-function hasService(services: string | null, selectedService: string) {
-  if (selectedService === "All Services") return true;
-  if (!services) return false;
-
+function splitServices(services: string | null) {
+  if (!services) return [];
   return services
     .split(",")
     .map((item) => item.trim().toLowerCase())
-    .filter(Boolean)
-    .includes(selectedService.toLowerCase());
+    .filter(Boolean);
 }
 
 function toRadians(value: number) {
@@ -167,8 +172,8 @@ export default function HomePage() {
   const [clubs, setClubs] = useState<Club[]>(() => cachedClubs ?? []);
   const [loading, setLoading] = useState(() => cachedClubs === null);
 
-  const [selectedCity, setSelectedCity] = useState("All");
-  const [selectedService, setSelectedService] = useState("All Services");
+  const [query, setQuery] = useState("");
+  const [selectedServices, setSelectedServices] = useState<string[]>([]);
 
   const [sortMode, setSortMode] = useState<SortMode>("distance");
   const [userLocation, setUserLocation] = useState<UserLocation | null>(() => cachedUserLocation);
@@ -204,7 +209,7 @@ export default function HomePage() {
         const { data, error } = await supabase
           .from("club_details")
           .select(
-            "id, name, city, area, cover_image, images, services, rating, review_count, latitude, longitude"
+            "id, name, city, area, cover_image, images, services, rating, review_count, latitude, longitude, boarding_price, daycare_price, pool_price, grooming_price, cafe_price"
           )
           .order("rating", { ascending: false });
 
@@ -320,6 +325,8 @@ export default function HomePage() {
       },
       (error) => {
         setLocationLoading(false);
+        // No location means no distances to sort by — fall back to rating.
+        setSortMode("rating");
 
         const code = error.code;
 
@@ -359,15 +366,24 @@ export default function HomePage() {
   }
 
   const filteredClubs = useMemo(() => {
+    const q = query.trim().toLowerCase();
+
     const result: ClubWithDistance[] = clubs
       .filter((club) => {
-        const cityMatch =
-          selectedCity === "All" ||
-          club.city?.toLowerCase() === selectedCity.toLowerCase();
+        // All-of, not any-of: Pool + Boarding means somewhere that does both.
+        const clubServices = splitServices(club.services);
+        const serviceMatch = selectedServices.every((service) =>
+          clubServices.includes(service.toLowerCase())
+        );
 
-        const serviceMatch = hasService(club.services, selectedService);
+        // Name, area and city — what people type for a club they half-remember.
+        const searchMatch =
+          q.length === 0 ||
+          [club.name, club.area, club.city]
+            .filter(Boolean)
+            .some((field) => (field as string).toLowerCase().includes(q));
 
-        return cityMatch && serviceMatch;
+        return serviceMatch && searchMatch;
       })
       .map((club) => {
         let distanceKm: number | null = null;
@@ -401,21 +417,50 @@ export default function HomePage() {
     }
 
     return result;
-  }, [clubs, selectedCity, selectedService, sortMode, userLocation]);
+  }, [clubs, query, selectedServices, sortMode, userLocation]);
 
-  const sortDropdownValue =
-    sortMode === "distance"
-      ? "distance"
-      : sortMode === "rating"
-      ? "rating"
-      : "";
+  function toggleSort() {
+    const next: SortMode = sortMode === "distance" ? "rating" : "distance";
+    setSortMode(next);
+    if (next === "distance" && !userLocation) {
+      requestLocationAndSort({ silent: false, autoApplyDistance: true });
+    }
+  }
+
+  function toggleService(label: string) {
+    setSelectedServices((current) =>
+      current.includes(label)
+        ? current.filter((service) => service !== label)
+        : [...current, label]
+    );
+  }
+
+  function clearFilters() {
+    setSelectedServices([]);
+    setQuery("");
+  }
+
+  const hasFilters = selectedServices.length > 0 || query.trim().length > 0;
+
+  // Name what's actually narrowing the list.
+  const emptyStateHint = (() => {
+    const typed = query.trim();
+    if (typed.length > 0) return `Nothing matches “${typed}”.`;
+    if (selectedServices.length > 1) {
+      return `No club offers ${selectedServices.join(" and ")} together. Try one at a time.`;
+    }
+    if (selectedServices.length === 1) return `No clubs offer ${selectedServices[0]} yet.`;
+    return "Try again in a moment.";
+  })();
+
+  const sortLabel = sortMode === "distance" ? "Nearest" : "Top rated";
 
   const sectionTitle =
-    sortMode === "distance" && userLocation
-      ? "Nearest clubs"
-      : sortMode === "rating"
+    sortMode === "rating"
       ? "Top rated clubs"
-      : "Popular clubs";
+      : userLocation
+      ? "Nearest clubs"
+      : "All clubs";
 
   return (
     <>
@@ -443,93 +488,70 @@ export default function HomePage() {
             </section>
 
             <section className="mb-4">
-              <div className="mb-2 -mx-1 flex gap-2 overflow-x-auto px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                {cityOptions.map((city) => (
+              {/* Search: first thing on the screen, one field, no chrome. */}
+              <div className="flex items-center gap-2.5 rounded-2xl border border-[#EEE7DC] bg-white px-4 py-3 shadow-[0_6px_16px_rgba(17,24,39,0.13)]">
+                <svg viewBox="0 0 24 24" className="h-[19px] w-[19px] shrink-0 text-[#7A746C]" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" aria-hidden="true">
+                  <circle cx="11" cy="11" r="7" />
+                  <path d="m20 20-3.5-3.5" />
+                </svg>
+                <input
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Club name or area…"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  enterKeyHint="search"
+                  className="min-w-0 flex-1 bg-transparent text-[15px] text-[#16386F] outline-none placeholder:text-[#B8AFA3]"
+                />
+                {query.length > 0 && (
                   <button
-                    key={city}
                     type="button"
-                    onClick={() => setSelectedCity(city)}
-                    className={`shrink-0 rounded-full border px-4 py-2 text-[13px] font-medium transition ${
-                      selectedCity === city
-                        ? "border-[#16386F] bg-[#16386F] text-white shadow-[0_6px_16px_rgba(22,56,111,0.16)]"
-                        : "border-[#E7DED1] bg-white text-[#3E362F]"
-                    }`}
+                    onClick={() => setQuery("")}
+                    aria-label="Clear search"
+                    className="flex h-[17px] w-[17px] items-center justify-center rounded-full bg-[#B8AFA3] text-[11px] leading-none text-white"
                   >
-                    {city}
+                    ×
                   </button>
-                ))}
+                )}
               </div>
 
-              <div className="flex items-center gap-2">
-                <div className="min-w-0 flex-1">
-                  <div className="relative">
-                    <select
-                      value={selectedService}
-                      onChange={(e) => setSelectedService(e.target.value)}
-                      className="h-11 w-full appearance-none rounded-full border border-[#E7DED1] bg-white px-4 pr-10 text-[14px] font-medium text-[#2E2A26] shadow-[0_6px_16px_rgba(17,24,39,0.04)] outline-none transition focus:border-[#16386F]"
+              {/* One row of experiences: centred under the search bar when it fits, scrolls when it does not. The -5px offsets the tile inset so tile edges line up with the search bar. */}
+              <div className="no-scrollbar -mx-[5px] mt-1 flex gap-1 overflow-x-auto pb-1.5 pt-3">
+                {EXPERIENCES.map((label) => {
+                  const active = selectedServices.includes(label);
+                  return (
+                    <button
+                      key={label}
+                      type="button"
+                      onClick={() => toggleService(label)}
+                      aria-pressed={active}
+                      className="flex w-17.5 shrink-0 flex-col items-center px-0.5 transition first:ml-auto last:mr-auto active:scale-95"
                     >
-                      {serviceOptions.map((service) => (
-                        <option key={service} value={service}>
-                          {service}
-                        </option>
-                      ))}
-                    </select>
-
-                    <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-base text-[#4A433D]">
-                      ˅
-                    </span>
-                  </div>
-                </div>
-
-                <div className="w-[132px] shrink-0">
-                  <div className="relative">
-                    <select
-                      value={sortDropdownValue}
-                      onChange={(e) => {
-                        const value = e.target.value as
-                          | ""
-                          | "distance"
-                          | "rating"
-                          | "clear";
-
-                        if (value === "distance") {
-                          setSortMode("distance");
-
-                          if (!userLocation) {
-                            requestLocationAndSort({
-                              silent: false,
-                              autoApplyDistance: true,
-                            });
-                          }
-                          return;
-                        }
-
-                        if (value === "rating") {
-                          setSortMode("rating");
-                          return;
-                        }
-
-                        setSortMode("none");
-                      }}
-                      disabled={locationLoading}
-                      className="h-11 w-full appearance-none rounded-full border border-[#E7DED1] bg-white px-4 pr-10 text-[14px] font-medium text-[#2E2A26] shadow-[0_6px_16px_rgba(17,24,39,0.04)] outline-none transition focus:border-[#16386F] disabled:opacity-60"
-                    >
-                      <option value="">Sort by</option>
-                      <option value="distance">Distance</option>
-                      <option value="rating">Rating</option>
-                      <option value="clear">Clear</option>
-                    </select>
-
-                    <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-base text-[#4A433D]">
-                      ˅
-                    </span>
-                  </div>
-                </div>
+                      {/* Transparent tile; selecting fills it with a soft brand tint. */}
+                      <span
+                        className={`flex h-15 w-15 items-center justify-center rounded-2xl border-[1.5px] transition-colors duration-200 ${
+                          active
+                            ? "border-[#16386F] bg-[#DCE6F5]"
+                            : "border-[#E6DED2] bg-transparent"
+                        }`}
+                      >
+                        <ExperienceIcon label={label} size={40} />
+                      </span>
+                      <span
+                        className={`mt-1.5 truncate text-[11.5px] ${
+                          active ? "font-bold text-[#16386F]" : "font-semibold text-[#7A746C]"
+                        }`}
+                      >
+                        {label}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
 
               {locationMessageVisible && (
                 <div
-                  className={`mt-3 px-1 text-xs font-medium text-[#7B7268] transition-opacity duration-500 ${
+                  className={`mt-2 px-1 text-xs font-medium text-[#7B7268] transition-opacity duration-500 ${
                     locationMessageFading ? "opacity-0" : "opacity-100"
                   }`}
                 >
@@ -537,25 +559,34 @@ export default function HomePage() {
                 </div>
               )}
             </section>
-
-            {!loading && (
-              <div className="mb-4 flex items-center justify-between px-1">
-                <span className="text-[18px] font-semibold tracking-[-0.02em] text-[#16386F]">
-                  {sectionTitle}
-                </span>
-                <span className="text-sm font-medium text-[#7A7368]">
-                  {filteredClubs.length} found
-                </span>
-              </div>
-            )}
           </div>
+
+          {/* Spans the same width as the grid so the title and sort line up with the cards. */}
+          {!loading && (
+            <div className="mb-4 mt-2 flex items-center justify-between gap-3">
+              <span className="flex-1 text-[13px] font-semibold uppercase tracking-[0.5px] text-[#7A746C]">
+                {sectionTitle}
+              </span>
+              <button
+                type="button"
+                onClick={toggleSort}
+                disabled={locationLoading}
+                className="flex items-center gap-1 text-[13px] font-semibold text-[#16386F] active:opacity-60 disabled:opacity-60"
+              >
+                <svg viewBox="0 0 24 24" className="h-[15px] w-[15px]" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M7 4v16M3 16l4 4 4-4M17 20V4M13 8l4-4 4 4" />
+                </svg>
+                {sortLabel}
+              </button>
+            </div>
+          )}
 
           <section className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {loading ? (
               <>
                 {[1, 2, 3].map((i) => (
                   <div key={i} className="rounded-[26px] border border-[#EDE4D8] bg-white overflow-hidden shadow-[0_12px_28px_rgba(17,24,39,0.05)] animate-pulse">
-                    <div className="h-[220px] bg-[#F0EBE3]" />
+                    <div className="h-64 bg-[#F0EBE3]" />
                     <div className="p-4 space-y-3">
                       <div className="h-5 w-2/3 rounded-full bg-[#F0EBE3]" />
                       <div className="h-4 w-1/3 rounded-full bg-[#F0EBE3]" />
@@ -568,10 +599,19 @@ export default function HomePage() {
                 ))}
               </>
             ) : filteredClubs.length === 0 ? (
-              <div className="col-span-full rounded-[26px] border border-[#EDE4D8] bg-white p-8 shadow-[0_12px_28px_rgba(17,24,39,0.05)] text-center">
+              <div className="col-span-full flex flex-col items-center px-8 py-16 text-center">
                 <p className="text-[32px]">🐾</p>
                 <p className="mt-2 text-[15px] font-semibold text-[#16386F]">No clubs found</p>
-                <p className="mt-1 text-[13px] text-[#7A7368]">Try changing the city or service filter</p>
+                <p className="mt-1 text-[13px] leading-5 text-[#7A7368]">{emptyStateHint}</p>
+                {hasFilters && (
+                  <button
+                    type="button"
+                    onClick={clearFilters}
+                    className="mt-5 rounded-full bg-[#16386F] px-5 py-3 text-[14px] font-semibold text-white active:opacity-90"
+                  >
+                    Clear filters
+                  </button>
+                )}
               </div>
             ) : (
               filteredClubs.map((club) => <ClubCard key={club.id} club={club} />)
