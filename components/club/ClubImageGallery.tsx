@@ -2,7 +2,7 @@
 
 import { ChevronLeft, ChevronRight, Images, Share2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 
 /**
  * Swipeable hero plus a thumbnail rail — ported from the app
@@ -22,17 +22,31 @@ type ClubImageGalleryProps = {
 export default function ClubImageGallery({ images, clubName, shareText }: ClubImageGalleryProps) {
   const router = useRouter();
   const trackRef = useRef<HTMLDivElement>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
   const [index, setIndex] = useState(0);
   const [copied, setCopied] = useState(false);
+  // Some stored photo URLs have gone dead upstream; drop them rather than show a blank frame.
+  const [broken, setBroken] = useState<Set<string>>(() => new Set());
 
   useLayoutEffect(() => {
     window.scrollTo(0, 0);
   }, []);
 
   const photos = useMemo(() => {
-    const cleaned = images.map((img) => img?.trim()).filter(Boolean);
+    const cleaned = images.map((img) => img?.trim()).filter((img) => img && !broken.has(img));
     return cleaned.length > 0 ? cleaned : ["/placeholder-club.jpg"];
-  }, [images]);
+  }, [images, broken]);
+
+  function markBroken(src: string) {
+    setBroken((prev) => (prev.has(src) ? prev : new Set(prev).add(src)));
+  }
+
+  // An image can fail before hydration attaches onError; catch those on mount.
+  useEffect(() => {
+    rootRef.current?.querySelectorAll("img").forEach((img) => {
+      if (img.complete && img.naturalWidth === 0) markBroken(img.getAttribute("src") ?? "");
+    });
+  }, []);
 
   const total = photos.length;
 
@@ -68,7 +82,7 @@ export default function ClubImageGallery({ images, clubName, shareText }: ClubIm
   }
 
   return (
-    <div className="md:px-5 md:pt-5">
+    <div ref={rootRef} className="md:px-5 md:pt-5">
       <div className="group relative h-80 w-full overflow-hidden bg-[#F4EFE6] md:h-auto md:aspect-3/2 md:rounded-[28px]">
         <div
           ref={trackRef}
@@ -85,6 +99,7 @@ export default function ClubImageGallery({ images, clubName, shareText }: ClubIm
               alt={`${clubName}, photo ${i + 1}`}
               loading={i === 0 ? "eager" : "lazy"}
               draggable={false}
+              onError={() => markBroken(src)}
               className="h-full w-full shrink-0 snap-center select-none object-cover"
             />
           ))}
@@ -180,7 +195,7 @@ export default function ClubImageGallery({ images, clubName, shareText }: ClubIm
                 i === index ? "border-[#16386F]" : "border-transparent opacity-60 hover:opacity-90"
               }`}
             >
-              <img src={src} alt="" loading="lazy" draggable={false} className="h-full w-full object-cover" />
+              <img src={src} alt="" loading="lazy" draggable={false} onError={() => markBroken(src)} className="h-full w-full object-cover" />
             </button>
           ))}
         </div>

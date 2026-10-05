@@ -106,7 +106,7 @@ export default function ClubDetailsLoading() {
       </div>
 
       <div className="fixed bottom-0 left-0 z-30 w-full border-t border-[#EDE4D8] bg-white px-5 pb-[calc(env(safe-area-inset-bottom)+14px)] pt-4">
-        <div className="mx-auto flex max-w-3xl items-center justify-between">
+        <div className="mx-auto flex max-w-3xl items-center justify-between md:px-5">
           <div>
             <div className="h-3 w-20 animate-pulse rounded-full bg-[#F4EFE6]" />
             <div className="mt-2 h-6 w-16 animate-pulse rounded-full bg-[#F4EFE6]" />

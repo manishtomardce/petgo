@@ -172,7 +172,6 @@ export default function HomePage() {
   const [clubs, setClubs] = useState<Club[]>(() => cachedClubs ?? []);
   const [loading, setLoading] = useState(() => cachedClubs === null);
 
-  const [query, setQuery] = useState("");
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
 
   const [sortMode, setSortMode] = useState<SortMode>("distance");
@@ -366,24 +365,13 @@ export default function HomePage() {
   }
 
   const filteredClubs = useMemo(() => {
-    const q = query.trim().toLowerCase();
-
     const result: ClubWithDistance[] = clubs
       .filter((club) => {
         // All-of, not any-of: Pool + Boarding means somewhere that does both.
         const clubServices = splitServices(club.services);
-        const serviceMatch = selectedServices.every((service) =>
+        return selectedServices.every((service) =>
           clubServices.includes(service.toLowerCase())
         );
-
-        // Name, area and city — what people type for a club they half-remember.
-        const searchMatch =
-          q.length === 0 ||
-          [club.name, club.area, club.city]
-            .filter(Boolean)
-            .some((field) => (field as string).toLowerCase().includes(q));
-
-        return serviceMatch && searchMatch;
       })
       .map((club) => {
         let distanceKm: number | null = null;
@@ -417,7 +405,7 @@ export default function HomePage() {
     }
 
     return result;
-  }, [clubs, query, selectedServices, sortMode, userLocation]);
+  }, [clubs, selectedServices, sortMode, userLocation]);
 
   function toggleSort() {
     const next: SortMode = sortMode === "distance" ? "rating" : "distance";
@@ -437,15 +425,12 @@ export default function HomePage() {
 
   function clearFilters() {
     setSelectedServices([]);
-    setQuery("");
   }
 
-  const hasFilters = selectedServices.length > 0 || query.trim().length > 0;
+  const hasFilters = selectedServices.length > 0;
 
   // Name what's actually narrowing the list.
   const emptyStateHint = (() => {
-    const typed = query.trim();
-    if (typed.length > 0) return `Nothing matches “${typed}”.`;
     if (selectedServices.length > 1) {
       return `No club offers ${selectedServices.join(" and ")} together. Try one at a time.`;
     }
@@ -488,35 +473,8 @@ export default function HomePage() {
             </section>
 
             <section className="mb-4">
-              {/* Search: first thing on the screen, one field, no chrome. */}
-              <div className="flex items-center gap-2.5 rounded-2xl border border-[#EEE7DC] bg-white px-4 py-3 shadow-[0_6px_16px_rgba(17,24,39,0.13)]">
-                <svg viewBox="0 0 24 24" className="h-[19px] w-[19px] shrink-0 text-[#7A746C]" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" aria-hidden="true">
-                  <circle cx="11" cy="11" r="7" />
-                  <path d="m20 20-3.5-3.5" />
-                </svg>
-                <input
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Club name or area…"
-                  autoCapitalize="none"
-                  autoCorrect="off"
-                  enterKeyHint="search"
-                  className="min-w-0 flex-1 bg-transparent text-[15px] text-[#16386F] outline-none placeholder:text-[#B8AFA3]"
-                />
-                {query.length > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => setQuery("")}
-                    aria-label="Clear search"
-                    className="flex h-[17px] w-[17px] items-center justify-center rounded-full bg-[#B8AFA3] text-[11px] leading-none text-white"
-                  >
-                    ×
-                  </button>
-                )}
-              </div>
-
-              {/* One row of experiences: centred under the search bar when it fits, scrolls when it does not. The -5px offsets the tile inset so tile edges line up with the search bar. */}
-              <div className="no-scrollbar -mx-[5px] mt-1 flex gap-1 overflow-x-auto pb-1.5 pt-3">
+              {/* One row of experiences: centred when it fits, scrolls when it does not. The -5px offsets the tile inset so tile edges line up with the column. */}
+              <div className="no-scrollbar -mx-[5px] flex gap-1 overflow-x-auto pb-1.5 pt-3">
                 {EXPERIENCES.map((label) => {
                   const active = selectedServices.includes(label);
                   return (

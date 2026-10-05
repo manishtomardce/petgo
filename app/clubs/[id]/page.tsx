@@ -310,7 +310,7 @@ export default async function ClubDetailsPage({ params }: ClubDetailsPageProps) 
         className="fixed bottom-0 left-0 z-30 w-full border-t border-[#EDE4D8] bg-white px-5 pt-4 shadow-[0_-6px_16px_rgba(17,24,39,0.06)]"
         style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 14px)" }}
       >
-        <div className="mx-auto flex max-w-3xl items-center justify-between">
+        <div className="mx-auto flex max-w-3xl items-center justify-between md:px-5">
           <div>
             <p className="text-[13px] text-[#7A746C]">
               {cheapest ? `${cheapest[0]} from` : "Starting from"}
