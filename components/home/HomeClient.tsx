@@ -274,6 +274,19 @@ export default function HomeClient({ initialClubs }: { initialClubs: Club[] | nu
     })();
   }, []);
 
+  // Coming back from Settings after allowing location: pick it up without a tap.
+  useEffect(() => {
+    if (!locationBlocked) return;
+    const retry = () => {
+      if (document.visibilityState === "visible") {
+        requestLocationAndSort({ silent: true, autoApplyDistance: true });
+      }
+    };
+    document.addEventListener("visibilitychange", retry);
+    return () => document.removeEventListener("visibilitychange", retry);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [locationBlocked]);
+
   function clearLocationMessageTimers() {
     locationMessageTimers.current.forEach((timer) =>
       window.clearTimeout(timer)
@@ -451,6 +464,59 @@ export default function HomeClient({ initialClubs }: { initialClubs: Club[] | nu
     return "Try again in a moment.";
   })();
 
+  /**
+   * Why the browser refused, and what fixes it on this device. The page can't
+   * re-open the permission prompt once it has been refused, so the visitor has
+   * to change it themselves.
+   */
+  function locationHelp(): { reason: string; steps: string[] } {
+    const ua = navigator.userAgent;
+    const ios = /iPhone|iPad|iPod/.test(ua);
+    const inApp = /Instagram|FBAN|FBAV|FB_IAB|Line\/|Snapchat|LinkedInApp|Twitter|; wv\)/.test(ua);
+
+    if (!window.isSecureContext) {
+      return {
+        reason: "Location only works on a secure (https) link.",
+        steps: ["Open the site's https:// address instead of this one."],
+      };
+    }
+    if (inApp) {
+      return {
+        reason: "This app's built-in browser doesn't share location.",
+        steps: [
+          "Tap the ••• or share menu at the top of the screen.",
+          ios ? "Choose “Open in Safari”." : "Choose “Open in Chrome” (or your browser).",
+        ],
+      };
+    }
+    if (ios) {
+      const chrome = /CriOS/.test(ua);
+      return {
+        reason: "Your iPhone is blocking location for this site.",
+        steps: chrome
+          ? [
+              "Settings → Apps → Chrome → Location → While Using the App.",
+              "Settings → Privacy & Security → Location Services must be on.",
+              "Come back and tap Try again.",
+            ]
+          : [
+              "Settings → Privacy & Security → Location Services → Safari Websites → While Using the App.",
+              "Settings → Apps → Safari → Location → Ask or Allow.",
+              "In Safari, tap “aA” in the address bar → Website Settings → Location → Ask.",
+              "Come back and tap Try again.",
+            ],
+      };
+    }
+    return {
+      reason: "Your browser is blocking location for this site.",
+      steps: [
+        "Tap the icon to the left of the address bar → Permissions (or Site settings).",
+        "Set Location to Allow, and make sure your phone's location is switched on.",
+        "Come back and tap Try again.",
+      ],
+    };
+  }
+
   const sortLabel = sortMode === "distance" ? "Nearest" : "Top rated";
 
   const sectionTitle =
@@ -523,24 +589,36 @@ export default function HomeClient({ initialClubs }: { initialClubs: Club[] | nu
               </div>
 
               {locationBlocked && (
-                <div className="mt-2 flex items-center justify-center gap-1.5 px-1 text-center text-[12px] text-[#7A746C]">
+                <div className="mx-auto mt-2 max-w-md rounded-2xl bg-[#FAF8F5] px-4 py-3 text-[12.5px] leading-5 text-[#4A433D]">
+                  <p>
+                    <span className="font-semibold text-[#16386F]">Showing top rated clubs.</span>{" "}
+                    {locationHelp().reason}
+                  </p>
                   {showLocationHelp ? (
-                    <span>
-                      Your browser is blocking location. Allow it for this site in your browser&apos;s
-                      settings (iPhone: Settings → Apps → Safari → Location), then reload.
-                    </span>
-                  ) : (
-                    <>
-                      <span>Location is off for this site, so clubs are sorted by rating.</span>
+                    <ol className="mt-2 list-decimal space-y-0.5 pl-4 text-[#7A746C]">
+                      {locationHelp().steps.map((step) => (
+                        <li key={step}>{step}</li>
+                      ))}
+                    </ol>
+                  ) : null}
+                  <div className="mt-2 flex gap-4">
+                    {!showLocationHelp && (
                       <button
                         type="button"
-                        onClick={() => requestLocationAndSort({ silent: false, autoApplyDistance: true })}
-                        className="shrink-0 font-semibold text-[#16386F] active:opacity-60"
+                        onClick={() => setShowLocationHelp(true)}
+                        className="font-semibold text-[#16386F] active:opacity-60"
                       >
-                        Use my location
+                        How to turn it on
                       </button>
-                    </>
-                  )}
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => requestLocationAndSort({ silent: false, autoApplyDistance: true })}
+                      className="font-semibold text-[#16386F] active:opacity-60"
+                    >
+                      Try again
+                    </button>
+                  </div>
                 </div>
               )}
 
